@@ -639,6 +639,66 @@
   </div>
 </section>
 
+<!-- Contact Form -->
+<section class="section" id="contato">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,var(--accent-zeus),var(--accent-alfred));">07</span>
+    🚀 Tenho Interesse!
+  </div>
+
+  <div class="info-box" style="border-left:3px solid #22c55e;">
+    <div class="icon">💡</div>
+    <p style="font-size:0.9rem;color:var(--text-dim);">
+      Quer saber mais sobre a arquitetura, contratar uma consultoria ou deixar uma sugestão? 
+      Preencha o formulário abaixo — sua mensagem vai direto para o <strong>John</strong>.
+    </p>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:600px;margin:0 auto;">
+    <form id="leadForm" style="display:flex;flex-direction:column;gap:1.25rem;">
+      <div>
+        <label for="name" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Nome *</label>
+        <input type="text" id="name" name="name" required
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
+      </div>
+      <div>
+        <label for="email" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Email *</label>
+        <input type="email" id="email" name="email" required
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
+      </div>
+      <div>
+        <label for="interest" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Área de Interesse</label>
+        <select id="interest" name="interest"
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
+          <option value="" style="background:var(--surface);">Selecione uma área</option>
+          <option value="engenharia" style="background:var(--surface);">🤖 Engenharia & Arquitetura (Jarvis)</option>
+          <option value="concierge" style="background:var(--surface);">🎩 Lifestyle & Concierge (Alfred)</option>
+          <option value="consultoria" style="background:var(--surface);">💼 Consultoria Estratégica (Zeus)</option>
+          <option value="supabase" style="background:var(--surface);">🔥 Supabase & Backend</option>
+          <option value="aws" style="background:var(--surface);">☁️ AWS & Cloud</option>
+          <option value="outro" style="background:var(--surface);">📌 Outro</option>
+        </select>
+      </div>
+      <div>
+        <label for="message" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Mensagem</label>
+        <textarea id="message" name="message" rows="4"
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;resize:vertical;font-family:inherit;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''"></textarea>
+      </div>
+      <button type="submit" id="submitBtn"
+        style="padding:0.9rem 2rem;background:linear-gradient(135deg,var(--accent-jarvis),#2563eb);border:none;border-radius:8px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;"
+        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 20px rgba(64,160,255,0.3)'"
+        onmouseout="this.style.transform='';this.style.boxShadow=''">
+        📨 Enviar Interesse
+      </button>
+    </form>
+    <div id="formStatus" style="margin-top:1rem;text-align:center;font-size:0.9rem;display:none;"></div>
+  </div>
+</section>
+
 <div class="footer">
   <p>⚡ Hermes Multi-Agent Architecture · John Coelho · Estância Velha, RS</p>
   <p style="margin-top:0.3rem;font-size:0.75rem;">Atualizado em Junho de 2026</p>
@@ -659,6 +719,69 @@ for (let i = 0; i < 50; i++) {
   p.style.animationDelay = (Math.random() * 20) + 's';
   container.appendChild(p);
 }
+
+// Contact Form - Submit directly to Supabase
+const SUPABASE_URL = 'https://lwaoxnjajxljxusxujku.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM0MDUsImV4cCI6MjA5NjE0OTQwNX0.usK7WkdJaGmXi5rk3tPoTKd4yH5EWCbcxsHaR3WOcEk';
+
+// Carrega Supabase SDK dinamicamente (esm.sh)
+async function submitLead(data) {
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0');
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  const { error } = await supabase
+    .from('leads')
+    .insert({
+      name: data.name,
+      email: data.email,
+      interest: data.interest || null,
+      message: data.message || null,
+      source: 'hermes-web'
+    });
+    
+  if (error) throw error;
+}
+
+document.getElementById('leadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('formStatus');
+  
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Enviando...';
+  status.style.display = 'none';
+  
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    interest: document.getElementById('interest').value,
+    message: document.getElementById('message').value.trim()
+  };
+  
+  if (!data.name || !data.email) {
+    status.style.display = 'block';
+    status.style.color = '#ef4444';
+    status.innerHTML = '❌ Nome e email são obrigatórios.';
+    btn.disabled = false;
+    btn.innerHTML = '📨 Enviar Interesse';
+    return;
+  }
+  
+  try {
+    await submitLead(data);
+    status.style.display = 'block';
+    status.style.color = '#22c55e';
+    status.innerHTML = '✅ Recebemos seu contato! Em breve entraremos em contato.';
+    document.getElementById('leadForm').reset();
+  } catch (err) {
+    status.style.display = 'block';
+    status.style.color = '#ef4444';
+    status.innerHTML = '❌ Erro ao enviar: ' + err.message + '. Tente novamente.';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📨 Enviar Interesse';
+  }
+});
 </script>
 
 </body>
