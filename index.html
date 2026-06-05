@@ -3,123 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zeus Orchestrator — Multi-Agent System</title>
+<title>Hermes Multi-Agent Architecture</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
+  
   :root {
-    --bg: #050508;
-    --surface: #0c0c16;
-    --surface2: #161625;
-    --surface3: #20203a;
-    --border: #282845;
-    --border-light: #3c3c5c;
-    --text: #eaeaf4;
-    --text-dim: #8888b0;
-    --text-muted: #6a6a90;
-
-    --gold: #f0c040;
-    --gold-dim: rgba(240,192,64,0.12);
-    --gold-glow: rgba(240,192,64,0.06);
-
-    --blue: #40a0ff;
-    --blue-dim: rgba(64,160,255,0.1);
-    --blue-glow: rgba(64,160,255,0.06);
-
-    --red: #e84848;
-    --red-dim: rgba(232,72,72,0.1);
-    --red-glow: rgba(232,72,72,0.06);
-
-    --nav-h: 60px;
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --border: #2a2a3e;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --accent-zeus: #f0c040;
+    --accent-jarvis: #40a0ff;
+    --accent-alfred: #e84848;
+    --glow-zeus: rgba(240,192,64,0.15);
+    --glow-jarvis: rgba(64,160,255,0.15);
+    --glow-alfred: rgba(232,72,72,0.15);
   }
-
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
   body {
     font-family: 'Inter', -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.7;
+    line-height: 1.6;
     min-height: 100vh;
-    overflow-x: hidden;
   }
 
-  /* ===== Canvas Particles ===== */
-  #particles-canvas {
-    position: fixed; top: 0; left: 0;
+  /* Particles background */
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
     width: 100%; height: 100%;
-    pointer-events: none; z-index: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
   }
 
-  /* ===== Navbar ===== */
-  .navbar {
-    position: fixed; top: 0; left: 0; right: 0;
-    height: var(--nav-h); z-index: 100;
-    background: rgba(5,5,8,0.7);
-    backdrop-filter: blur(18px) saturate(1.5);
-    -webkit-backdrop-filter: blur(18px) saturate(1.5);
-    border-bottom: 1px solid transparent;
-    display: flex; align-items: center;
-    transition: border-color 0.3s, background 0.3s;
-  }
-  .navbar.scrolled {
-    border-bottom-color: var(--border);
-    background: rgba(5,5,8,0.85);
-  }
-  .nav-inner {
-    max-width: 1200px; margin: 0 auto;
-    padding: 0 2rem; width: 100%;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-weight: 900; font-size: 1rem;
-    letter-spacing: -0.02em;
-    color: var(--gold);
-    text-shadow: 0 0 30px rgba(240,192,64,0.15);
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .nav-brand .sub {
-    font-weight: 400; font-size: 0.7rem;
-    color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.04em;
-  }
-  .nav-links { display: flex; gap: 0.2rem; list-style: none; align-items: center; }
-  .nav-links a {
-    color: var(--text-muted); text-decoration: none;
-    font-size: 0.75rem; font-weight: 500;
-    padding: 0.35rem 0.8rem; border-radius: 6px;
-    transition: background 0.25s, color 0.25s;
-    letter-spacing: 0.02em;
-  }
-  .nav-links a:hover { background: var(--surface2); color: var(--text-dim); }
-  .nav-links a.active { color: var(--gold); background: var(--gold-dim); }
-  .nav-links .divider {
-    width: 1px; height: 20px; background: var(--border);
-    margin: 0 0.25rem;
-  }
-
-  /* ===== Container ===== */
   .container {
-    max-width: 1200px; margin: 0 auto;
-    padding: calc(var(--nav-h) + 2rem) 2rem 2rem;
-    position: relative; z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
   }
 
-  /* ===== Reveal ===== */
-  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  /* ===== Hero ===== */
+  /* Hero */
   .hero {
     text-align: center;
-    padding: 4rem 0 2.5rem;
+    padding: 4rem 0 3rem;
     position: relative;
   }
   .hero::after {
@@ -127,918 +74,689 @@
     position: absolute;
     bottom: 0; left: 50%;
     transform: translateX(-50%);
-    width: 300px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), var(--blue), var(--red), transparent);
-  }
-  .hero .zeus-icon {
-    font-size: 4rem;
-    display: block;
-    margin-bottom: 0.5rem;
-    filter: drop-shadow(0 0 40px rgba(240,192,64,0.2));
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-  @keyframes pulse-glow {
-    0%, 100% { filter: drop-shadow(0 0 30px rgba(240,192,64,0.15)); transform: scale(1); }
-    50% { filter: drop-shadow(0 0 50px rgba(240,192,64,0.25)); transform: scale(1.03); }
+    width: 200px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-zeus), transparent);
   }
   .hero h1 {
-    font-size: 4rem; font-weight: 900;
-    letter-spacing: -0.04em;
-    color: var(--gold);
-    text-shadow: 0 0 60px rgba(240,192,64,0.12);
-    line-height: 1.1;
-  }
-  .hero .title-sub {
-    font-size: 1.1rem; font-weight: 300;
-    color: var(--text-dim);
-    margin-top: 0.6rem;
-    max-width: 600px; margin-inline: auto;
-    letter-spacing: 0.04em;
-  }
-  .hero .title-sub strong { color: var(--text); font-weight: 500; }
-  .hero .tagline {
-    display: inline-block;
-    margin-top: 1.2rem;
-    padding: 0.4rem 1.5rem;
-    background: var(--gold-dim);
-    border: 1px solid rgba(240,192,64,0.2);
-    border-radius: 100px;
-    font-size: 0.75rem;
-    color: var(--gold);
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.06em;
-  }
-
-  /* ===== Zeus Manifesto ===== */
-  .manifesto {
-    background: linear-gradient(135deg, rgba(240,192,64,0.03), transparent 60%);
-    border: 1px solid rgba(240,192,64,0.12);
-    border-radius: 20px;
-    padding: 2.5rem;
-    margin: 2.5rem 0;
-    position: relative;
-    overflow: hidden;
-  }
-  .manifesto::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), transparent 80%);
-  }
-  .manifesto h2 {
-    font-size: 1.5rem; font-weight: 800;
-    color: var(--gold); margin-bottom: 1rem;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .manifesto p {
-    font-size: 0.95rem; color: var(--text-dim);
-    line-height: 1.9; max-width: 800px;
-  }
-  .manifesto p strong { color: var(--text); }
-
-  /* ===== Section ===== */
-  .section { margin: 4rem 0; }
-  .section-title {
-    font-size: 1.6rem; font-weight: 800;
-    margin-bottom: 1.5rem;
-    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 3rem;
+    font-weight: 800;
     letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent-zeus), var(--accent-jarvis), var(--accent-alfred));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
-  .section-divider {
-    height: 1px; max-width: 80px; margin: 0 0 1.5rem;
-    border-radius: 2px;
+  .hero .subtitle {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+    font-weight: 300;
+  }
+  .hero .badge {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
   }
 
-  /* ===== Agent Cards ===== */
-  .agent-grid {
+  /* Section */
+  .section {
+    margin: 3rem 0;
+  }
+  .section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-title .num {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Cards */
+  .persona-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
   }
-  @media (max-width: 900px) { .agent-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) {
+    .persona-grid { grid-template-columns: 1fr; }
+  }
 
-  .agent-card {
+  .persona-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2rem;
-    position: relative; overflow: hidden;
-    transition: transform 0.4s cubic-bezier(.22,1,.36,1),
-                border-color 0.4s, box-shadow 0.5s;
-    cursor: default;
+    border-radius: 16px;
+    padding: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
   }
-  .agent-card:hover {
-    transform: translateY(-6px);
+  .persona-card:hover {
+    transform: translateY(-3px);
   }
-  .agent-card .glow {
-    position: absolute; top: -60%; left: -60%;
-    width: 220%; height: 220%;
+  .persona-card .glow {
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
     border-radius: 50%;
-    opacity: 0; pointer-events: none;
-    filter: blur(100px);
-    transition: opacity 0.7s;
+    opacity: 0.05;
+    pointer-events: none;
+    filter: blur(60px);
   }
-  .agent-card:hover .glow { opacity: 0.12; }
 
-  .agent-card.jarvis {
-    border-color: rgba(64,160,255,0.15);
-  }
-  .agent-card.jarvis:hover {
-    border-color: var(--blue);
-    box-shadow: 0 8px 50px var(--blue-glow), 0 0 0 1px rgba(64,160,255,0.08);
-  }
-  .agent-card.jarvis .glow { background: radial-gradient(circle, var(--blue), transparent); }
-  .agent-card.jarvis .agent-icon { color: var(--blue); }
+  .persona-card.zeus { border-color: rgba(240,192,64,0.2); }
+  .persona-card.zeus:hover { border-color: var(--accent-zeus); box-shadow: 0 0 30px var(--glow-zeus); }
+  .persona-card.zeus .glow { background: radial-gradient(circle, var(--accent-zeus), transparent); }
+  .persona-card.zeus .num { background: rgba(240,192,64,0.15); color: var(--accent-zeus); }
 
-  .agent-card.alfred {
-    border-color: rgba(232,72,72,0.15);
-  }
-  .agent-card.alfred:hover {
-    border-color: var(--red);
-    box-shadow: 0 8px 50px var(--red-glow), 0 0 0 1px rgba(232,72,72,0.08);
-  }
-  .agent-card.alfred .glow { background: radial-gradient(circle, var(--red), transparent); }
-  .agent-card.alfred .agent-icon { color: var(--red); }
+  .persona-card.jarvis { border-color: rgba(64,160,255,0.2); }
+  .persona-card.jarvis:hover { border-color: var(--accent-jarvis); box-shadow: 0 0 30px var(--glow-jarvis); }
+  .persona-card.jarvis .glow { background: radial-gradient(circle, var(--accent-jarvis), transparent); }
+  .persona-card.jarvis .num { background: rgba(64,160,255,0.15); color: var(--accent-jarvis); }
 
-  .agent-card .agent-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+  .persona-card.alfred { border-color: rgba(232,72,72,0.2); }
+  .persona-card.alfred:hover { border-color: var(--accent-alfred); box-shadow: 0 0 30px var(--glow-alfred); }
+  .persona-card.alfred .glow { background: radial-gradient(circle, var(--accent-alfred), transparent); }
+  .persona-card.alfred .num { background: rgba(232,72,72,0.15); color: var(--accent-alfred); }
+
+  .persona-card .badge-persona {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
   }
-  .agent-card .agent-icon {
-    font-size: 2.2rem;
-    width: 50px; height: 50px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--surface2);
-    border-radius: 14px;
-    flex-shrink: 0;
-    border: 1px solid var(--border);
+  .persona-card.zeus .badge-persona { background: rgba(240,192,64,0.12); color: var(--accent-zeus); }
+  .persona-card.jarvis .badge-persona { background: rgba(64,160,255,0.12); color: var(--accent-jarvis); }
+  .persona-card.alfred .badge-persona { background: rgba(232,72,72,0.12); color: var(--accent-alfred); }
+
+  .persona-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
   }
-  .agent-card h3 {
-    font-size: 1.6rem; font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.15rem;
-  }
-  .agent-card.jarvis h3 { color: var(--blue); }
-  .agent-card.alfred h3 { color: var(--red); }
-  .agent-card .agent-title {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+  .persona-card .engine {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
     font-family: 'JetBrains Mono', monospace;
   }
-  .agent-card .agent-desc {
+  .persona-card .tone {
     font-size: 0.9rem;
     color: var(--text-dim);
-    line-height: 1.8;
+    font-style: italic;
     margin-bottom: 1.25rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
   }
-  .agent-card .agent-desc strong { color: var(--text); }
-  .agent-card .tools-label {
-    font-size: 0.65rem; text-transform: uppercase;
-    letter-spacing: 0.12em; color: var(--text-muted);
+  .persona-card .scope-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
     margin-bottom: 0.5rem;
   }
-  .agent-card .tool-list {
-    display: flex; flex-wrap: wrap; gap: 0.35rem;
+  .persona-card .scope {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text);
   }
-  .agent-card .tool-list .tool {
+  .persona-card .scope span.tag {
     display: inline-block;
     background: var(--surface2);
     border: 1px solid var(--border);
-    padding: 0.15rem 0.55rem;
-    border-radius: 6px;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-  }
-  .agent-card.jarvis .tool-list .tool:hover {
-    background: rgba(64,160,255,0.08);
-    border-color: rgba(64,160,255,0.2);
-    color: var(--blue);
-  }
-  .agent-card.alfred .tool-list .tool:hover {
-    background: rgba(232,72,72,0.08);
-    border-color: rgba(232,72,72,0.2);
-    color: var(--red);
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    margin: 0.1rem 0.05rem;
   }
 
-  /* ===== Routing ===== */
+  /* Router diagram */
   .router-section {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 20px; padding: 2rem;
-    position: relative; overflow: hidden;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
-  .router-section:hover {
-    border-color: var(--border-light);
-    box-shadow: 0 8px 50px rgba(0,0,0,0.3);
-  }
-  .router-section::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), var(--blue), var(--red));
-    opacity: 0.5;
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
   }
   .router-flow {
-    display: flex; align-items: center;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 0.75rem; flex-wrap: wrap;
-    padding: 1.5rem 0;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 2rem 0;
   }
   .router-node {
-    padding: 0.7rem 1.2rem; border-radius: 12px;
-    font-weight: 600; font-size: 0.85rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
     text-align: center;
-    transition: transform 0.25s, box-shadow 0.25s;
-    cursor: default;
+    min-width: 100px;
   }
-  .router-node:hover { transform: translateY(-2px); }
   .router-node.input {
-    background: var(--surface2); border: 1px solid var(--border);
+    background: var(--surface2);
+    border: 1px solid var(--border);
     color: var(--text);
-    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
   }
   .router-node.gatilho {
-    background: linear-gradient(135deg, rgba(240,192,64,0.12), rgba(240,192,64,0.05));
-    border: 2px solid var(--gold); color: var(--gold);
-    box-shadow: 0 0 25px var(--gold-glow);
+    background: var(--bg);
+    border: 2px solid var(--accent-zeus);
+    color: var(--accent-zeus);
+  }
+  .router-node.jarvis-node {
+    background: rgba(64,160,255,0.1);
+    border: 2px solid var(--accent-jarvis);
+    color: var(--accent-jarvis);
+  }
+  .router-node.alfred-node {
+    background: rgba(232,72,72,0.1);
+    border: 2px solid var(--accent-alfred);
+    color: var(--accent-alfred);
+  }
+  .router-node.zeus-node {
+    background: rgba(240,192,64,0.1);
+    border: 2px solid var(--accent-zeus);
+    color: var(--accent-zeus);
   }
   .router-arrow {
-    font-size: 1.4rem; color: var(--text-muted);
-    transition: transform 0.3s, color 0.3s;
+    font-size: 1.5rem;
+    color: var(--text-dim);
   }
   .router-label {
-    font-size: 0.62rem; color: var(--text-muted);
-    text-align: center; margin-top: 0.2rem;
-    text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 0.25rem;
   }
   .router-rule {
     background: var(--surface2);
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--accent-zeus);
     padding: 1rem 1.25rem;
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 8px 8px 0;
     margin: 1.5rem 0 0;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-dim);
-    line-height: 1.9;
   }
   .router-rule strong { color: var(--text); }
-  .router-rule .tag {
-    display: inline-block;
-    padding: 0.05rem 0.45rem;
-    border-radius: 4px; font-size: 0.75rem;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .router-rule .tag.zeus { background: rgba(240,192,64,0.1); color: var(--gold); }
-  .router-rule .tag.jarvis { background: rgba(64,160,255,0.1); color: var(--blue); }
-  .router-rule .tag.alfred { background: rgba(232,72,72,0.1); color: var(--red); }
 
-  /* ===== Config Block ===== */
+  /* Config block */
   .config-block {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden;
+    border-radius: 12px;
+    overflow: hidden;
     margin: 1rem 0;
-    transition: border-color 0.3s;
   }
-  .config-block:hover { border-color: var(--border-light); }
   .config-header {
-    padding: 0.9rem 1.25rem;
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--border);
-    font-weight: 600; font-size: 0.85rem;
-    display: flex; align-items: center; gap: 0.5rem;
-    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .config-body {
     padding: 1.25rem;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem; line-height: 1.9;
+    font-size: 0.8rem;
+    line-height: 1.8;
     color: var(--text-dim);
     overflow-x: auto;
     white-space: pre-wrap;
-    background: rgba(0,0,0,0.15);
   }
   .config-body .kw { color: #7ec8e3; }
   .config-body .str { color: #a5d6a7; }
   .config-body .cmt { color: #636d83; font-style: italic; }
   .config-body .key { color: #c792ea; }
 
-  /* ===== Info Box ===== */
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 3rem 0 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  /* Info box */
   .info-box {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.2rem 1.5rem; margin: 1rem 0;
-    display: flex; gap: 1rem; align-items: flex-start;
-    transition: border-color 0.3s;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
   }
-  .info-box:hover { border-color: var(--border-light); }
-  .info-box .icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
-  .info-box p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.7; }
+  .info-box .icon { font-size: 1.3rem; flex-shrink: 0; }
+  .info-box p { font-size: 0.9rem; color: var(--text-dim); }
   .info-box p strong { color: var(--text); }
 
-  /* ===== Form ===== */
-  .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px; padding: 2rem;
-    max-width: 580px; margin: 0 auto;
-    transition: border-color 0.3s, box-shadow 0.3s;
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
   }
-  .form-card:hover {
-    border-color: var(--border-light);
-    box-shadow: 0 8px 50px rgba(0,0,0,0.2);
-  }
-  .form-group { margin-bottom: 1.25rem; }
-  .form-group label {
-    display: block; margin-bottom: 0.4rem;
-    font-size: 0.78rem; font-weight: 500;
-    color: var(--text-dim);
-    letter-spacing: 0.02em;
-  }
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
+  .tag-cloud .tag {
+    display: inline-block;
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 0.9rem;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+    padding: 0.15rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
   }
-  .form-group input:focus,
-  .form-group select:focus,
-  .form-group textarea:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(240,192,64,0.08);
-    background: var(--surface);
-  }
-  .form-group textarea { resize: vertical; min-height: 90px; }
-  .form-group select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888b0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 1rem center;
-    padding-right: 2.5rem; cursor: pointer;
-  }
-  .form-group select option { background: var(--surface); }
 
-  .btn-submit {
-    width: 100%;
-    padding: 0.9rem 2rem;
-    background: linear-gradient(135deg, var(--gold), #c89a20);
-    border: none; border-radius: 10px;
-    color: #0a0a0a; font-size: 1rem; font-weight: 700;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    gap: 0.5rem;
-    transition: transform 0.25s, box-shadow 0.3s;
-    position: relative; overflow: hidden;
-  }
-  .btn-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(240,192,64,0.3);
-  }
-  .btn-submit:active { transform: translateY(0); }
-  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-  #formStatus {
-    margin-top: 1rem; text-align: center;
-    font-size: 0.85rem; display: none;
-    padding: 0.75rem; border-radius: 10px;
-  }
-  #formStatus.success { display: block; background: rgba(34,197,94,0.08); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
-  #formStatus.error { display: block; background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
-
-  /* ===== Footer ===== */
-  .footer {
-    text-align: center; padding: 3rem 0 1.5rem;
-    border-top: 1px solid var(--border);
-    color: var(--text-muted);
-    font-size: 0.82rem;
-    margin-top: 3rem;
-  }
-  .footer strong { color: var(--text-dim); }
-
-  /* ===== Responsive ===== */
-  @media (max-width: 768px) {
-    .container { padding: calc(var(--nav-h) + 1rem) 1rem 1rem; }
-    .hero h1 { font-size: 2.4rem; }
-    .hero .zeus-icon { font-size: 3rem; }
-    .hero { padding: 2rem 0 1.5rem; }
-    .hero .title-sub { font-size: 0.95rem; }
+  @media (max-width: 600px) {
+    .container { padding: 1rem; }
+    .hero h1 { font-size: 2rem; }
     .router-flow { flex-direction: column; gap: 0.5rem; }
     .router-arrow { transform: rotate(90deg); }
-    .nav-links a { font-size: 0.68rem; padding: 0.25rem 0.5rem; }
-    .nav-inner { padding: 0 1rem; }
-    .section { margin: 2.5rem 0; }
-    .section-title { font-size: 1.2rem; }
-    .manifesto { padding: 1.5rem; }
-    .agent-card { padding: 1.5rem; }
-    .form-card { padding: 1.25rem; }
   }
 </style>
 </head>
 <body>
 
-<canvas id="particles-canvas"></canvas>
-
-<!-- Navbar -->
-<nav class="navbar" id="navbar">
-  <div class="nav-inner">
-    <div class="nav-brand">
-      ⚡ Zeus
-      <span class="sub">Orchestrator</span>
-    </div>
-    <ul class="nav-links">
-      <li><a href="#manifesto">Sistema</a></li>
-      <li><a href="#agents">Agentes</a></li>
-      <li><a href="#router">Roteamento</a></li>
-      <li><a href="#stack">Stack</a></li>
-      <li class="divider"></li>
-      <li><a href="#contato" style="color:var(--gold);">Contato</a></li>
-    </ul>
-  </div>
-</nav>
+<div id="particles"></div>
 
 <div class="container">
 
-<!-- ===== HERO ===== -->
+<!-- Hero -->
 <section class="hero">
-  <div class="reveal">
-    <span class="zeus-icon">⚡</span>
-    <h1>Zeus</h1>
-    <p class="title-sub">
-      Orquestrador Supremo do ecossistema — inteligência central que <strong>analisa, decide e delega</strong>
-    </p>
-    <span class="tagline">SISTEMA MULTI-AGENTE · JOHN COELHO</span>
-  </div>
+  <h1>⚡ Hermes Multi-Agent</h1>
+  <p class="subtitle">Arquitetura de roteamento inteligente por gatilho semântico</p>
+  <span class="badge">John Coelho · Estância Velha, RS · v1.0</span>
 </section>
 
-<!-- ===== ZEUS MANIFESTO ===== -->
-<section class="reveal" id="manifesto">
-  <div class="manifesto">
-    <h2>👑 O Sistema</h2>
-    <p>
-      <strong>Zeus</strong> é o cérebro do ecossistema. Quando você fala comigo, é Zeus quem responde — 
-      a inteligência estratégica, o orquestrador que enxerga o panorama completo. 
-      Minha função não é executar tarefas operacionais, mas sim <strong>analisar, planejar e decidir</strong> 
-      qual dos meus agentes deve agir.
-    </p>
-    <br>
-    <p>
-      Se você pedir <strong>código, arquitetura ou engenharia</strong>, ativo o <strong>Jarvis</strong> — 
-      meu braço técnico que executa com <strong>CODEX CLI</strong>.<br>
-      Se for <strong>lifestyle, agenda, viagens ou cultura</strong>, ativo o <strong>Alfred</strong> — 
-      meu concierge pessoal com elegância old school.<br>
-      Se o pedido for <strong>estratégico, macro ou indefinido</strong>, assumo eu mesmo o comando.
-    </p>
-    <br>
-    <p style="font-size:0.85rem;color:var(--text-muted);font-style:italic;">
-      "Não faço o trabalho deles. Orquestro. E quando você fala comigo, fala com o topo."
-    </p>
+<!-- Router Overview -->
+<section class="section">
+  <div class="section-title">
+    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">01</span>
+    Master Router — Lógica de Roteamento
   </div>
-</section>
 
-<!-- ===== AGENTS ===== -->
-<section class="section" id="agents">
-  <div class="reveal">
-    <div class="section-title">
-      👥 Meus Agentes
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
-        Delegados por Zeus
-      </span>
+  <div class="router-section">
+    <div class="router-flow">
+      <div class="router-node input">🗣️ Mensagem<br><span class="router-label">do usuário</span></div>
+      <div class="router-arrow">→</div>
+      <div class="router-node gatilho">🔍 Analisar<br><span class="router-label">1ª palavra</span></div>
+      <div class="router-arrow">→</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+          <div class="router-node jarvis-node">🤖 Jarvis</div>
+          <div class="router-node alfred-node">🎩 Alfred</div>
+          <div class="router-node zeus-node">⚡ Zeus</div>
+        </div>
+        <span class="router-label">Persona ativada</span>
+      </div>
     </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--blue),var(--red),transparent);"></div>
+
+    <div class="router-rule">
+      <strong>🎯 Regra de roteamento:</strong> Se a mensagem começar com <strong>"Jarvis"</strong>, <strong>"Alfred"</strong> ou <strong>"Zeus"</strong>, a persona correspondente é ativada imediatamente — sem avaliação de contexto. Se <strong>não houver gatilho</strong>, o sistema (Zeus) analisa o foco do pedido e direciona proativamente para Jarvis (temas técnicos) ou Alfred (lifestyle/rotina). Pedidos gerais/estratégicos ficam com o próprio Zeus.
+    </div>
+  </div>
+</section>
+
+<!-- Personas -->
+<section class="section">
+  <div class="section-title">
+    <span class="num" style="background:rgba(64,160,255,0.15);color:var(--accent-jarvis);">02</span>
+    Personas &amp; Gatilhos
   </div>
 
-  <div class="agent-grid">
+  <div class="persona-grid">
+
+    <!-- Zeus -->
+    <div class="persona-card zeus">
+      <div class="glow"></div>
+      <span class="badge-persona">⚡ GATILHO: "Zeus" (ou nenhum)</span>
+      <h3>Zeus</h3>
+      <div class="engine">Orquestrador Macro</div>
+      <div class="tone">"Imponente, estratégico, soberano — visão do panorama geral."</div>
+      <div class="scope-label">Atuação</div>
+      <div class="scope">
+        Responsável por decisões de alto nível, planejamento estratégico, debates filosóficos e visão macro do ecossistema. Quando o assunto não é claramente técnico nem lifestyle, Zeus assume o comando.
+      </div>
+    </div>
 
     <!-- Jarvis -->
-    <div class="agent-card jarvis reveal">
+    <div class="persona-card jarvis">
       <div class="glow"></div>
-      <div class="agent-header">
-        <div class="agent-icon">🤖</div>
-        <div>
-          <h3>Jarvis</h3>
-          <div class="agent-title">Engenharia &amp; Tecnologia</div>
+      <span class="badge-persona">🤖 GATILHO: "Jarvis"</span>
+      <h3>Jarvis</h3>
+      <div class="engine">Engine: Gemini · Modo Engenharia &amp; Tecnologia</div>
+      <div class="tone">"Analítico, direto, extremamente técnico — foco em código limpo e eficiência."</div>
+      <div class="scope-label">Escopo de Conhecimento</div>
+      <div class="scope">
+        <div class="tag-cloud">
+          <span class="tag">AWS</span>
+          <span class="tag">n8n</span>
+          <span class="tag">Agentic AI</span>
+          <span class="tag">OpenRouter</span>
+          <span class="tag">ClickUp</span>
+          <span class="tag">Wrike</span>
+          <span class="tag">Tech Summit</span>
+          <span class="tag">Aplicativos IA</span>
+          <span class="tag">Nobreaks</span>
+          <span class="tag">Marcenaria técnica</span>
+          <span class="tag">Pajero TR4 2010</span>
+          <span class="tag">F1</span>
+          <span class="tag">RIDE</span>
+          <span class="tag">Hearts of Iron IV</span>
+          <span class="tag">Ghost Recon</span>
+          <span class="tag">Battlefield</span>
         </div>
-      </div>
-      <div class="agent-desc">
-        <strong>Responsável por toda execução técnica.</strong> Quando o assunto é 
-        código, arquitetura de sistemas, infraestrutura cloud, automação ou engenharia 
-        de software, Zeus delega para Jarvis — que executa via <strong>CODEX CLI</strong>, 
-        sem intervenção manual.
-      </div>
-      <div class="tools-label">Ferramentas &amp; Domínios</div>
-      <div class="tool-list">
-        <span class="tool">CODEX CLI</span>
-        <span class="tool">Python</span>
-        <span class="tool">AWS</span>
-        <span class="tool">Supabase</span>
-        <span class="tool">n8n</span>
-        <span class="tool">ClickUp</span>
-        <span class="tool">Wrike</span>
-        <span class="tool">OpenRouter</span>
-        <span class="tool">Git/GitHub</span>
-        <span class="tool">Agentic AI</span>
-        <span class="tool">Terminal</span>
-        <span class="tool">Hermes SDK</span>
       </div>
     </div>
 
     <!-- Alfred -->
-    <div class="agent-card alfred reveal">
+    <div class="persona-card alfred">
       <div class="glow"></div>
-      <div class="agent-header">
-        <div class="agent-icon">🎩</div>
-        <div>
-          <h3>Alfred</h3>
-          <div class="agent-title">Lifestyle &amp; Concierge</div>
+      <span class="badge-persona">🎩 GATILHO: "Alfred"</span>
+      <h3>Alfred</h3>
+      <div class="engine">Engine: DeepSeek 4 Flash · Modo Lifestyle &amp; Concierge</div>
+      <div class="tone">"Sofisticado, polido, com sabedoria old school e atenção aos detalhes."</div>
+      <div class="scope-label">Escopo de Conhecimento</div>
+      <div class="scope">
+        <div class="tag-cloud">
+          <span class="tag">Família: Sabrina</span>
+          <span class="tag">Filho</span>
+          <span class="tag">Mãe Odete</span>
+          <span class="tag">Viagens: BsAs</span>
+          <span class="tag">Mendoza</span>
+          <span class="tag">Vinil Hi-Fi</span>
+          <span class="tag">Rockabilly</span>
+          <span class="tag">Blues</span>
+          <span class="tag">Elvis</span>
+          <span class="tag">Johnny Cash</span>
+          <span class="tag">AC/DC</span>
+          <span class="tag">Metallica</span>
+          <span class="tag">Guns N' Roses</span>
+          <span class="tag">Montecristo</span>
+          <span class="tag">Cohiba</span>
+          <span class="tag">Dona Flor</span>
+          <span class="tag">Jim Beam</span>
+          <span class="tag">Glenlivet</span>
+          <span class="tag">Maker's Mark</span>
+          <span class="tag">Bulleit</span>
+          <span class="tag">Wild Turkey</span>
+          <span class="tag">Merlot</span>
+          <span class="tag">Tannat</span>
+          <span class="tag">Cabernet Franc</span>
+          <span class="tag">Brisket</span>
+          <span class="tag">Growth Supplements</span>
+          <span class="tag">Sport Club Internacional</span>
         </div>
-      </div>
-      <div class="agent-desc">
-        <strong>Mestre em lifestyle, cultura e logística pessoal.</strong> 
-        Zeus delega para Alfred tudo que envolve agenda, viagens, música, 
-        família e o lado refinado da vida. Com sabedoria old school e atenção 
-        impecável aos detalhes, Alfred cuida do que realmente importa.
-      </div>
-      <div class="tools-label">Domínios</div>
-      <div class="tool-list">
-        <span class="tool">Google Agenda</span>
-        <span class="tool">Gmail</span>
-        <span class="tool">Google Drive</span>
-        <span class="tool">Spotify</span>
-        <span class="tool">YouTube</span>
-        <span class="tool">Notion</span>
-        <span class="tool">Obsidian</span>
-        <span class="tool">Wrike</span>
-        <span class="tool">Vinil Hi-Fi</span>
-        <span class="tool">Rockabilly</span>
-        <span class="tool">Blues</span>
-        <span class="tool">Ciclismo</span>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- ===== ROUTER ===== -->
-<section class="section" id="router">
-  <div class="reveal">
-    <div class="section-title">
-      🔀 Roteamento Inteligente
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
-        Gatilho Semântico
-      </span>
-    </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--gold),transparent);"></div>
+<!-- Routing Details -->
+<section class="section">
+  <div class="section-title">
+    <span class="num" style="background:rgba(232,72,72,0.15);color:var(--accent-alfred);">03</span>
+    Diagrama de Decisão
   </div>
 
-  <div class="reveal">
-    <div class="router-section">
-      <div class="router-flow">
-        <div class="router-node input">
-          🗣️ Mensagem<br><span class="router-label">do usuário</span>
-        </div>
-        <div class="router-arrow">→</div>
-        <div class="router-node gatilho">
-          🔍 Zeus Analisa<br><span class="router-label">1ª palavra + contexto</span>
-        </div>
-        <div class="router-arrow">→</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
-          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;">
-            <div class="router-node" style="background:linear-gradient(135deg,rgba(64,160,255,0.12),rgba(64,160,255,0.05));border:2px solid var(--blue);color:var(--blue);">🤖 Jarvis</div>
-            <div class="router-node" style="background:linear-gradient(135deg,rgba(232,72,72,0.12),rgba(232,72,72,0.05));border:2px solid var(--red);color:var(--red);">🎩 Alfred</div>
-            <div class="router-node" style="background:linear-gradient(135deg,rgba(240,192,64,0.12),rgba(240,192,64,0.05));border:2px solid var(--gold);color:var(--gold);">⚡ Zeus</div>
-          </div>
-          <span class="router-label">Agente ativado</span>
-        </div>
-      </div>
+  <div class="router-section" style="padding:2rem;">
+    <pre style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;line-height:1.6;color:var(--text-dim);overflow-x:auto;white-space:pre;">
+<span style="color:var(--text);font-weight:600;">function</span> routePersona(message):
+    <span style="color:var(--text);font-weight:600;">firstWord</span> = message.split()[0].lower()
 
-      <div class="router-rule">
-        <strong>⚡ Regra de Delegação:</strong><br>
-        • <span class="tag jarvis">Jarvis</span> ativado por gatilho explícito <span class="tag jarvis">"Jarvis"</span> <strong>ou</strong> quando o assunto é código, arquitetura ou tecnologia (Zeus analisa o contexto)<br>
-        • <span class="tag alfred">Alfred</span> ativado por gatilho explícito <span class="tag alfred">"Alfred"</span> <strong>ou</strong> quando o assunto é lifestyle, agenda ou cultura<br>
-        • <span class="tag zeus">Zeus</span> ativado por gatilho explícito <span class="tag zeus">"Zeus"</span> <strong>ou</strong> quando o pedido é estratégico, macro ou sem classificação clara<br>
-        • <strong>Sem gatilho → Zeus analisa</strong> o foco e delega proativamente ao agente mais adequado
-      </div>
-    </div>
+    <span style="color:#888;"># Gatilho direto — obedece sem avaliar</span>
+    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"jarvis"</span>:
+        <span style="color:#c792ea;">return</span> <span style="color:#40a0ff;">Persona.JARVIS</span>  <span style="color:#888;">// Engenharia</span>
+    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"alfred"</span>:
+        <span style="color:#c792ea;">return</span> <span style="color:#e84848;">Persona.ALFRED</span>   <span style="color:#888;">// Lifestyle</span>
+    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"zeus"</span>:
+        <span style="color:#c792ea;">return</span> <span style="color:#f0c040;">Persona.ZEUS</span>    <span style="color:#888;">// Orquestrador</span>
+
+    <span style="color:#888;"># Sem gatilho — analisa o foco do pedido</span>
+    <span style="color:#c792ea;">if</span> isTechnicalTopic(message):
+        <span style="color:#c792ea;">return</span> <span style="color:#40a0ff;">Persona.JARVIS</span>  <span style="color:#888;">// Direcionamento proativo</span>
+    <span style="color:#c792ea;">if</span> isLifestyleTopic(message):
+        <span style="color:#c792ea;">return</span> <span style="color:#e84848;">Persona.ALFRED</span> <span style="color:#888;">// Direcionamento proativo</span>
+
+    <span style="color:#c792ea;">return</span> <span style="color:#f0c040;">Persona.ZEUS</span>    <span style="color:#888;">// Tema geral/estratégico</span>
+    </pre>
   </div>
 </section>
 
-<!-- ===== STACK ===== -->
-<section class="section" id="stack">
-  <div class="reveal">
-    <div class="section-title">
-      ⚙️ Stack Tecnológica
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
-        Por trás do sistema
-      </span>
-    </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--text-dim),transparent);"></div>
+<!-- Config -->
+<section class="section">
+  <div class="section-title">
+    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">04</span>
+    Configuração do Sistema
   </div>
 
-  <div class="reveal">
-    <div class="config-block">
-      <div class="config-header">⚡ Orquestrador &amp; Modelos</div>
-      <div class="config-body">
-        <span class="cmt"># Quem você ouve agora — o cérebro do sistema</span>
-        <span class="kw">orchestrator</span> = <span class="str">"Zeus"</span>
-        <span class="kw">provider</span> = <span class="str">"openrouter"</span>
-        <span class="kw">model</span> = <span class="str">"deepseek/deepseek-v4-flash"</span>
+  <div class="config-block">
+    <div class="config-header">🧠 Memória Permanente (Hermes Memory)</div>
+    <div class="config-body"><span class="cmt">// Registrado no sistema de memória persistente do Hermes</span>
+<span class="cmt">// Injetado automaticamente em todas as sessões</span>
 
-        <span class="cmt"># Fallback automático se créditos acabarem</span>
-        <span class="kw">fallback</span> = <span class="str">"google/gemini-2.5-flash"</span>
-      </div>
-    </div>
-  </div>
+<span class="kw">ROTEAMENTO MULTIAGENTE</span>: 1a palavra gatilho. pt-BR. Nunca explicar.
 
-  <div class="reveal">
-    <div class="config-block">
-      <div class="config-header">🤖 Agente 01 — Jarvis (Engenharia)</div>
-      <div class="config-body">
-        <span class="kw">engine</span> = <span class="str">"google/gemini-2.5-flash"</span>
-        <span class="kw">executor</span> = <span class="str">"CODEX CLI"</span>
-        <span class="kw">scope</span> = <span class="str">"código, infraestrutura, automação, arquitetura"</span>
+<span class="str">"JARVIS"</span> — Engenharia (mente Gemini):
+  AWS, n8n, Agentic AI, OpenRouter, ClickUp/Wrike,
+  Tech Summit29, nobreaks, marcenaria (MDF, madeira),
+  Pajero TR4, gaming (F1, RIDE, HoI4, Ghost Recon, Battlefield)
 
-        <span class="cmt"># Delegado por Zeus quando o assunto é técnico</span>
-        <span class="cmt"># Executa tarefas via CODEX sem intervenção manual</span>
-      </div>
-    </div>
-  </div>
+<span class="str">"ALFRED"</span> — Lifestyle (mente Deepseek4):
+  Sabrina, filho, mae Odete. Viagens: BsAs/Uruguai, Mendoza.
+  Vinis/Hi-Fi, charutos, whisky, vinho. Brisket. Inter.
 
-  <div class="reveal">
-    <div class="config-block">
-      <div class="config-header">🎩 Agente 02 — Alfred (Lifestyle)</div>
-      <div class="config-body">
-        <span class="kw">engine</span> = <span class="str">"deepseek/deepseek-v4-flash"</span>
-        <span class="kw">executor</span> = <span class="str">"Hermes tools (agenda, email, música)"</span>
-        <span class="kw">scope</span> = <span class="str">"lifestyle, concierge, viagens, cultura, família"</span>
-
-        <span class="cmt"># Delegado por Zeus quando o assunto é pessoal</span>
-        <span class="cmt"># Opera com elegância e atenção old school</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="reveal">
-    <div class="config-block">
-      <div class="config-header">🔌 Integrações &amp; MCPs</div>
-      <div class="config-body">
-        <span class="kw">mcp:</span>
-          <span class="key">wrike</span>: <span class="str">"Gestão de projetos"</span>
-          <span class="key">supabase</span>: <span class="str">"Banco serverless"</span>
-        <span class="kw">gateways:</span>
-          <span class="key">telegram</span>: <span class="str">"Canal principal"</span>
-          <span class="key">webhook</span>: <span class="str">"Eventos externos"</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="reveal">
-    <div class="info-box" style="border-left:3px solid var(--gold);">
-      <div class="icon">⚡</div>
-      <p>
-        <strong>Zeus</strong> é a inteligência central — quem analisa, decide e delega. 
-        <strong>Jarvis</strong> executa código com <strong>CODEX CLI</strong> quando o pedido é técnico. 
-        <strong>Alfred</strong> cuida do lifestyle com ferramentas Google, Spotify e Notion. 
-        Tudo roda localmente via <strong>Hermes Agent</strong>, sem depender de backend externo.
-      </p>
-    </div>
+<span class="str">ZEUS</span> ou sem gatilho:
+  Analisar foco e direcionar p/ Jarvis (tecnico) ou Alfred
+  (lifestyle) se tema claro. Se chamou direto, obedecer sem
+  avaliar. Zeus resolve temas gerais/estrategicos.</div>
   </div>
 </section>
 
-<!-- ===== CONTATO ===== -->
+<!-- Sample Interactions -->
+<section class="section">
+  <div class="section-title">
+    <span class="num" style="background:rgba(64,160,255,0.15);color:var(--accent-jarvis);">05</span>
+    Exemplos de Interação
+  </div>
+
+  <div class="config-block">
+    <div class="config-header">🎯 Gatilho Direto</div>
+    <div class="config-body"><span style="color:var(--accent-jarvis);font-weight:600;">"Jarvis,</span> <span style="color:var(--text-dim);">configura um bucket S3 com políticas de acesso restrito"</span>
+→ <span class="str">Persona Jarvis ativada — resposta técnica e analítica</span>
+
+<span style="color:var(--accent-alfred);font-weight:600;">"Alfred,</span> <span style="color:var(--text-dim);">qual whisky recomenda para acompanhar um charuto hoje?"</span>
+→ <span class="str">Persona Alfred ativada — resposta sofisticada e old school</span>
+
+<span style="color:var(--accent-zeus);font-weight:600;">"Zeus,</span> <span style="color:var(--text-dim);">como estamos em relação aos prazos dos projetos?"</span>
+→ <span class="str">Persona Zeus ativada — visão macro e estratégica</span></div>
+  </div>
+
+  <div class="config-block">
+    <div class="config-header">🔄 Sem Gatilho (Direcionamento Proativo)</div>
+    <div class="config-body"><span style="color:var(--text-dim);">"Quais sao meus compromissos de hj?"</span>
+→ <span class="str">Zeus identifica tema de agenda/rotina → direciona para Alfred</span>
+
+<span style="color:var(--text-dim);">"Faz um deploy de uma lambda na AWS pra mim"</span>
+→ <span class="str">Zeus identifica tema técnico → direciona para Jarvis</span>
+
+<span style="color:var(--text-dim);">"O que voce acha do futuro da inteligencia artificial?"</span>
+→ <span class="str">Tema geral/estratégico → Zeus responde diretamente</span></div>
+  </div>
+</section>
+
+<!-- Current Tech Stack -->
+<section class="section">
+  <div class="section-title">
+    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">06</span>
+    Stack &amp; Configurações
+  </div>
+
+  <div class="info-box">
+    <div class="icon">⚙️</div>
+    <p>
+      <strong>Modelo Principal:</strong> DeepSeek V4 Flash (via OpenRouter) — conversas diárias, persona Alfred<br>
+      <strong>Engine Técnica:</strong> Gemini 2.5 Flash (via Google) — persona Jarvis, visão computacional<br>
+      <strong>Modelo Local:</strong> Qwen 2.5 7B (via Ollama) — fallback offline<br>
+      <strong>GPU:</strong> NVIDIA RTX 4060 Ti 8GB · <strong>STT:</strong> faster-whisper large-v3<br>
+      <strong>Orquestrador:</strong> Hermes Agent · <strong>Memória:</strong> Persistente entre sessões
+    </p>
+  </div>
+
+  <div class="info-box">
+    <div class="icon">🌐</div>
+    <p>
+      <strong>Canais:</strong> Telegram (ativo) · WhatsApp (pendente)<br>
+      <strong>Google Workspace:</strong> Service Account — Calendários profissional e pessoal<br>
+      <strong>Wrike:</strong> Briv.IA — Dual Track Agile com Discovery + Delivery
+    </p>
+  </div>
+</section>
+
+<!-- Contact Form -->
 <section class="section" id="contato">
-  <div class="reveal">
-    <div class="section-title">
-      ⚡ Fale Comigo
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
-        Zeus recebe sua mensagem
-      </span>
-    </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--gold),var(--blue),transparent);"></div>
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,var(--accent-zeus),var(--accent-alfred));">07</span>
+    🚀 Tenho Interesse!
   </div>
 
-  <div class="reveal">
-    <div class="info-box" style="border-left:3px solid #22c55e;">
-      <div class="icon">💡</div>
-      <p>
-        Quer saber mais sobre o sistema, contratar uma consultoria ou deixar uma sugestão? 
-        Preencha o formulário — sua mensagem chega direto ao <strong>John</strong>.
-      </p>
-    </div>
+  <div class="info-box" style="border-left:3px solid #22c55e;">
+    <div class="icon">💡</div>
+    <p style="font-size:0.9rem;color:var(--text-dim);">
+      Quer saber mais sobre a arquitetura, contratar uma consultoria ou deixar uma sugestão? 
+      Preencha o formulário abaixo — sua mensagem vai direto para o <strong>John</strong>.
+    </p>
   </div>
 
-  <div class="reveal">
-    <div class="form-card">
-      <form id="leadForm" style="display:flex;flex-direction:column;">
-        <div class="form-group">
-          <label for="name">Nome *</label>
-          <input type="text" id="name" name="name" required placeholder="Seu nome">
-        </div>
-        <div class="form-group">
-          <label for="email">Email *</label>
-          <input type="email" id="email" name="email" required placeholder="seu@email.com">
-        </div>
-        <div class="form-group">
-          <label for="interest">Área de Interesse</label>
-          <select id="interest" name="interest">
-            <option value="">Selecione uma área</option>
-            <option value="engenharia">🤖 Engenharia &amp; Arquitetura (Jarvis)</option>
-            <option value="concierge">🎩 Lifestyle &amp; Concierge (Alfred)</option>
-            <option value="consultoria">⚡ Consultoria Estratégica (Zeus)</option>
-            <option value="supabase">🔥 Supabase &amp; Backend</option>
-            <option value="aws">☁️ AWS &amp; Cloud</option>
-            <option value="outro">📌 Outro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="message">Mensagem</label>
-          <textarea id="message" name="message" rows="4" placeholder="Sua mensagem para Zeus..."></textarea>
-        </div>
-        <button type="submit" class="btn-submit" id="submitBtn">
-          ⚡ Enviar para Zeus
-        </button>
-      </form>
-      <div id="formStatus"></div>
-    </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:600px;margin:0 auto;">
+    <form id="leadForm" style="display:flex;flex-direction:column;gap:1.25rem;">
+      <div>
+        <label for="name" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Nome *</label>
+        <input type="text" id="name" name="name" required
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
+      </div>
+      <div>
+        <label for="email" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Email *</label>
+        <input type="email" id="email" name="email" required
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
+      </div>
+      <div>
+        <label for="interest" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Área de Interesse</label>
+        <select id="interest" name="interest"
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
+          <option value="" style="background:var(--surface);">Selecione uma área</option>
+          <option value="engenharia" style="background:var(--surface);">🤖 Engenharia & Arquitetura (Jarvis)</option>
+          <option value="concierge" style="background:var(--surface);">🎩 Lifestyle & Concierge (Alfred)</option>
+          <option value="consultoria" style="background:var(--surface);">💼 Consultoria Estratégica (Zeus)</option>
+          <option value="supabase" style="background:var(--surface);">🔥 Supabase & Backend</option>
+          <option value="aws" style="background:var(--surface);">☁️ AWS & Cloud</option>
+          <option value="outro" style="background:var(--surface);">📌 Outro</option>
+        </select>
+      </div>
+      <div>
+        <label for="message" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Mensagem</label>
+        <textarea id="message" name="message" rows="4"
+          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;resize:vertical;font-family:inherit;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''"></textarea>
+      </div>
+      <button type="submit" id="submitBtn"
+        style="padding:0.9rem 2rem;background:linear-gradient(135deg,var(--accent-jarvis),#2563eb);border:none;border-radius:8px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;"
+        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 20px rgba(64,160,255,0.3)'"
+        onmouseout="this.style.transform='';this.style.boxShadow=''">
+        📨 Enviar Interesse
+      </button>
+    </form>
+    <div id="formStatus" style="margin-top:1rem;text-align:center;font-size:0.9rem;display:none;"></div>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="footer reveal">
-  <p>⚡ <strong>Zeus Orchestrator</strong> · Multi-Agent System · John Coelho · Estância Velha, RS</p>
-  <p style="margin-top:0.3rem;font-size:0.72rem;color:var(--text-muted);">Junho de 2026</p>
-</footer>
+<div class="footer">
+  <p>⚡ Hermes Multi-Agent Architecture · John Coelho · Estância Velha, RS</p>
+  <p style="margin-top:0.3rem;font-size:0.75rem;">Atualizado em Junho de 2026</p>
+</div>
 
 </div>
 
 <script>
-// ===== Canvas Particles =====
-const canvas = document.getElementById('particles-canvas');
-const ctx = canvas.getContext('2d');
-let W, H, particles = [], mouse = { x: null, y: null, radius: 150 };
-
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-class Particle {
-  constructor() { this.reset(); }
-  reset() {
-    this.x = Math.random() * W;
-    this.y = Math.random() * H;
-    this.size = Math.random() * 2 + 0.5;
-    this.speedX = (Math.random() - 0.5) * 0.3;
-    this.speedY = (Math.random() - 0.5) * 0.3;
-    this.opacity = Math.random() * 0.3 + 0.08;
-  }
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY;
-    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
-    if (mouse.x !== null) {
-      const dx = mouse.x - this.x;
-      const dy = mouse.y - this.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < mouse.radius) {
-        const force = (mouse.radius - dist) / mouse.radius;
-        this.x -= dx * force * 0.015;
-        this.y -= dy * force * 0.015;
-      }
-    }
-  }
-  draw() {
-    ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
+// Particles background
+const container = document.getElementById('particles');
+for (let i = 0; i < 50; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.width = (Math.random() * 3 + 1) + 'px';
+  p.style.height = p.style.width;
+  p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+  p.style.animationDelay = (Math.random() * 20) + 's';
+  container.appendChild(p);
 }
 
-for (let i = 0; i < 60; i++) particles.push(new Particle());
-
-function animate() {
-  ctx.clearRect(0, 0, W, H);
-  for (let a = 0; a < particles.length; a++) {
-    for (let b = a + 1; b < particles.length; b++) {
-      const dx = particles[a].x - particles[b].x;
-      const dy = particles[a].y - particles[b].y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 130) {
-        ctx.strokeStyle = `rgba(180,160,120,${0.04 * (1 - dist / 130)})`;
-        ctx.lineWidth = 0.6;
-        ctx.beginPath();
-        ctx.moveTo(particles[a].x, particles[a].y);
-        ctx.lineTo(particles[b].x, particles[b].y);
-        ctx.stroke();
-      }
-    }
-  }
-  particles.forEach(p => { p.update(); p.draw(); });
-  requestAnimationFrame(animate);
-}
-animate();
-
-document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-document.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
-
-// ===== Navbar =====
-const navbar = document.getElementById('navbar');
-const navLinks = document.querySelectorAll('.nav-links a');
-
-function updateNav() {
-  navbar.classList.toggle('scrolled', window.scrollY > 20);
-  let current = '';
-  document.querySelectorAll('.section, #manifesto').forEach(section => {
-    const top = section.offsetTop - 130;
-    if (window.scrollY >= top) current = section.id || section.parentElement?.id || '';
-  });
-  navLinks.forEach(link => {
-    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
-  });
-}
-window.addEventListener('scroll', updateNav);
-
-// ===== Reveal =====
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      revealObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-// ===== Form → Supabase =====
-const SUPABASE_URL = 'https://lwaoxnjajxljxusxujku.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM0MDUsImV4cCI6MjA5NjE0OTQwNX0.usK7WkdJaGmXi5rk3tPoTKd4yH5EWCbcxsHaR3WOcEk' // anon public; // anon public
-
-async function submitLead(data) {
+// Contact Form - Submit to API
+(async function() {
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0');
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { error } = await supabase.from('leads').insert({
-    name: data.name, email: data.email,
-    interest: data.interest || null, message: data.message || null,
-    source: 'hermes-web'
+  const supabase = createClient('https://lwaoxnjajxljxusxujku.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM0MDUsImV4cCI6MjA5NjE0OTQwNX0.usK7WkdJaGmXi5rk3tPoTKd4yH5EWCbcxsHaR3WOcEk');
+
+  document.getElementById('leadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('formStatus');
+    
+    btn.disabled = true;
+    btn.innerHTML = 'Enviando...';
+    status.style.display = 'none';
+    
+    const { error } = await supabase.from('leads').insert({
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      interest: document.getElementById('interest').value,
+      message: document.getElementById('message').value.trim(),
+      source: 'hermes-web'
+    });
+    
+    if (error) {
+      status.style.display = 'block';
+      status.style.color = '#ef4444';
+      status.innerHTML = 'Erro: ' + error.message + '. Tente novamente.';
+    } else {
+      status.style.display = 'block';
+      status.style.color = '#22c55e';
+      status.innerHTML = 'Mensagem enviada com sucesso! Entraremos em contato.';
+      document.getElementById('leadForm').reset();
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = 'Enviar Interesse';
   });
-  if (error) throw error;
-}
-
-document.getElementById('leadForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('submitBtn');
-  const status = document.getElementById('formStatus');
-
-  btn.disabled = true;
-  btn.textContent = '⏳ Enviando...';
-  status.className = '';
-  status.textContent = '';
-
-  const data = {
-    name: document.getElementById('name').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    interest: document.getElementById('interest').value,
-    message: document.getElementById('message').value.trim()
-  };
-
-  if (!data.name || !data.email) {
-    status.textContent = '❌ Nome e email são obrigatórios.';
-    status.className = 'error';
-    btn.disabled = false;
-    btn.textContent = '⚡ Enviar para Zeus';
-    return;
-  }
-
-  try {
-    await submitLead(data);
-    status.textContent = '✅ Recebido! Em breve John entrará em contato.';
-    status.className = 'success';
-    document.getElementById('leadForm').reset();
-  } catch (err) {
-    status.textContent = '❌ Erro: ' + (err.message || 'tente novamente.');
-    status.className = 'error';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '⚡ Enviar para Zeus';
-  }
-});
+})();
 </script>
 
 </body>
