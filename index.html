@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hermes Multi-Agent Architecture</title>
+<title>Zeus Orchestrator — Multi-Agent System</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
@@ -11,26 +11,32 @@
   html { scroll-behavior: smooth; }
 
   :root {
-    --bg: #07070d;
-    --surface: #0f0f1a;
-    --surface2: #181828;
-    --surface3: #22223a;
-    --border: #28283e;
-    --border-light: #3a3a54;
-    --text: #eeeef6;
-    --text-dim: #8888a8;
-    --text-muted: #6a6a88;
-    --accent-zeus: #f0c040;
-    --accent-jarvis: #40a0ff;
-    --accent-alfred: #e84848;
-    --glow-zeus: rgba(240,192,64,0.08);
-    --glow-jarvis: rgba(64,160,255,0.08);
-    --glow-alfred: rgba(232,72,72,0.08);
+    --bg: #050508;
+    --surface: #0c0c16;
+    --surface2: #161625;
+    --surface3: #20203a;
+    --border: #282845;
+    --border-light: #3c3c5c;
+    --text: #eaeaf4;
+    --text-dim: #8888b0;
+    --text-muted: #6a6a90;
 
-    --nav-h: 56px;
+    --gold: #f0c040;
+    --gold-dim: rgba(240,192,64,0.12);
+    --gold-glow: rgba(240,192,64,0.06);
+
+    --blue: #40a0ff;
+    --blue-dim: rgba(64,160,255,0.1);
+    --blue-glow: rgba(64,160,255,0.06);
+
+    --red: #e84848;
+    --red-dim: rgba(232,72,72,0.1);
+    --red-glow: rgba(232,72,72,0.06);
+
+    --nav-h: 60px;
   }
 
-  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
@@ -46,7 +52,8 @@
 
   /* ===== Canvas Particles ===== */
   #particles-canvas {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
     pointer-events: none; z-index: 0;
   }
 
@@ -54,36 +61,49 @@
   .navbar {
     position: fixed; top: 0; left: 0; right: 0;
     height: var(--nav-h); z-index: 100;
-    background: rgba(7,7,13,0.75);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    border-bottom: 1px solid var(--border);
+    background: rgba(5,5,8,0.7);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    border-bottom: 1px solid transparent;
     display: flex; align-items: center;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, background 0.3s;
   }
-  .navbar.scrolled { border-color: var(--border-light); }
+  .navbar.scrolled {
+    border-bottom-color: var(--border);
+    background: rgba(5,5,8,0.85);
+  }
   .nav-inner {
-    max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 2rem; width: 100%;
     display: flex; align-items: center; justify-content: space-between;
-    width: 100%;
   }
   .nav-brand {
-    font-weight: 800; font-size: 0.95rem;
-    background: linear-gradient(135deg, var(--accent-zeus), var(--accent-alfred));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-weight: 900; font-size: 1rem;
     letter-spacing: -0.02em;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(240,192,64,0.15);
+    display: flex; align-items: center; gap: 0.5rem;
   }
-  .nav-links { display: flex; gap: 0.25rem; list-style: none; }
+  .nav-brand .sub {
+    font-weight: 400; font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  .nav-links { display: flex; gap: 0.2rem; list-style: none; align-items: center; }
   .nav-links a {
-    color: var(--text-dim); text-decoration: none;
-    font-size: 0.78rem; font-weight: 500;
-    padding: 0.35rem 0.75rem; border-radius: 6px;
+    color: var(--text-muted); text-decoration: none;
+    font-size: 0.75rem; font-weight: 500;
+    padding: 0.35rem 0.8rem; border-radius: 6px;
     transition: background 0.25s, color 0.25s;
     letter-spacing: 0.02em;
   }
-  .nav-links a:hover { background: var(--surface2); color: var(--text); }
-  .nav-links a.active { color: var(--accent-zeus); background: rgba(240,192,64,0.08); }
+  .nav-links a:hover { background: var(--surface2); color: var(--text-dim); }
+  .nav-links a.active { color: var(--gold); background: var(--gold-dim); }
+  .nav-links .divider {
+    width: 1px; height: 20px; background: var(--border);
+    margin: 0 0.25rem;
+  }
 
   /* ===== Container ===== */
   .container {
@@ -93,87 +113,249 @@
   }
 
   /* ===== Reveal ===== */
-  .reveal {
-    opacity: 0; transform: translateY(30px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-  }
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.visible { opacity: 1; transform: translateY(0); }
 
   /* ===== Hero ===== */
   .hero {
-    text-align: center; padding: 3.5rem 0 2.5rem;
+    text-align: center;
+    padding: 4rem 0 2.5rem;
     position: relative;
   }
   .hero::after {
-    content: ''; position: absolute;
-    bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 240px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-zeus), var(--accent-alfred), transparent);
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--blue), var(--red), transparent);
+  }
+  .hero .zeus-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 40px rgba(240,192,64,0.2));
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(240,192,64,0.15)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 50px rgba(240,192,64,0.25)); transform: scale(1.03); }
   }
   .hero h1 {
-    font-size: 3.5rem; font-weight: 900;
+    font-size: 4rem; font-weight: 900;
     letter-spacing: -0.04em;
-    background: linear-gradient(135deg, var(--accent-zeus) 0%, var(--accent-jarvis) 50%, var(--accent-alfred) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.15;
+    color: var(--gold);
+    text-shadow: 0 0 60px rgba(240,192,64,0.12);
+    line-height: 1.1;
   }
-  .hero .subtitle {
-    color: var(--text-dim); font-size: 1.15rem;
-    margin-top: 0.8rem; font-weight: 300;
+  .hero .title-sub {
+    font-size: 1.1rem; font-weight: 300;
+    color: var(--text-dim);
+    margin-top: 0.6rem;
     max-width: 600px; margin-inline: auto;
+    letter-spacing: 0.04em;
   }
-  .hero .badge {
-    display: inline-block; margin-top: 1.2rem;
-    padding: 0.35rem 1.2rem;
-    border: 1px solid var(--border); border-radius: 100px;
-    font-size: 0.75rem; color: var(--text-muted);
+  .hero .title-sub strong { color: var(--text); font-weight: 500; }
+  .hero .tagline {
+    display: inline-block;
+    margin-top: 1.2rem;
+    padding: 0.4rem 1.5rem;
+    background: var(--gold-dim);
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    color: var(--gold);
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.06em;
   }
 
+  /* ===== Zeus Manifesto ===== */
+  .manifesto {
+    background: linear-gradient(135deg, rgba(240,192,64,0.03), transparent 60%);
+    border: 1px solid rgba(240,192,64,0.12);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin: 2.5rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .manifesto::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent 80%);
+  }
+  .manifesto h2 {
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--gold); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .manifesto p {
+    font-size: 0.95rem; color: var(--text-dim);
+    line-height: 1.9; max-width: 800px;
+  }
+  .manifesto p strong { color: var(--text); }
+
   /* ===== Section ===== */
   .section { margin: 4rem 0; }
   .section-title {
-    font-size: 1.5rem; font-weight: 800;
+    font-size: 1.6rem; font-weight: 800;
     margin-bottom: 1.5rem;
     display: flex; align-items: center; gap: 0.75rem;
-    letter-spacing: -0.02em;
-  }
-  .section-title .num {
-    width: 34px; height: 34px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    flex-shrink: 0;
+    letter-spacing: -0.03em;
   }
   .section-divider {
-    height: 1px; max-width: 80px; margin: 0.5rem 0 1.5rem;
+    height: 1px; max-width: 80px; margin: 0 0 1.5rem;
     border-radius: 2px;
   }
 
-  /* ===== Router Section ===== */
+  /* ===== Agent Cards ===== */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 900px) { .agent-grid { grid-template-columns: 1fr; } }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative; overflow: hidden;
+    transition: transform 0.4s cubic-bezier(.22,1,.36,1),
+                border-color 0.4s, box-shadow 0.5s;
+    cursor: default;
+  }
+  .agent-card:hover {
+    transform: translateY(-6px);
+  }
+  .agent-card .glow {
+    position: absolute; top: -60%; left: -60%;
+    width: 220%; height: 220%;
+    border-radius: 50%;
+    opacity: 0; pointer-events: none;
+    filter: blur(100px);
+    transition: opacity 0.7s;
+  }
+  .agent-card:hover .glow { opacity: 0.12; }
+
+  .agent-card.jarvis {
+    border-color: rgba(64,160,255,0.15);
+  }
+  .agent-card.jarvis:hover {
+    border-color: var(--blue);
+    box-shadow: 0 8px 50px var(--blue-glow), 0 0 0 1px rgba(64,160,255,0.08);
+  }
+  .agent-card.jarvis .glow { background: radial-gradient(circle, var(--blue), transparent); }
+  .agent-card.jarvis .agent-icon { color: var(--blue); }
+
+  .agent-card.alfred {
+    border-color: rgba(232,72,72,0.15);
+  }
+  .agent-card.alfred:hover {
+    border-color: var(--red);
+    box-shadow: 0 8px 50px var(--red-glow), 0 0 0 1px rgba(232,72,72,0.08);
+  }
+  .agent-card.alfred .glow { background: radial-gradient(circle, var(--red), transparent); }
+  .agent-card.alfred .agent-icon { color: var(--red); }
+
+  .agent-card .agent-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .agent-card .agent-icon {
+    font-size: 2.2rem;
+    width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface2);
+    border-radius: 14px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .agent-card h3 {
+    font-size: 1.6rem; font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.15rem;
+  }
+  .agent-card.jarvis h3 { color: var(--blue); }
+  .agent-card.alfred h3 { color: var(--red); }
+  .agent-card .agent-title {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .agent-card .agent-desc {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .agent-card .agent-desc strong { color: var(--text); }
+  .agent-card .tools-label {
+    font-size: 0.65rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .agent-card .tool-list {
+    display: flex; flex-wrap: wrap; gap: 0.35rem;
+  }
+  .agent-card .tool-list .tool {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .agent-card.jarvis .tool-list .tool:hover {
+    background: rgba(64,160,255,0.08);
+    border-color: rgba(64,160,255,0.2);
+    color: var(--blue);
+  }
+  .agent-card.alfred .tool-list .tool:hover {
+    background: rgba(232,72,72,0.08);
+    border-color: rgba(232,72,72,0.2);
+    color: var(--red);
+  }
+
+  /* ===== Routing ===== */
   .router-section {
-    background: var(--surface); border: 1px solid var(--border);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 20px; padding: 2rem;
     position: relative; overflow: hidden;
     transition: border-color 0.3s, box-shadow 0.3s;
   }
-  .router-section:hover { border-color: var(--border-light); box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
+  .router-section:hover {
+    border-color: var(--border-light);
+    box-shadow: 0 8px 50px rgba(0,0,0,0.3);
+  }
   .router-section::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--accent-zeus), var(--accent-jarvis), var(--accent-alfred));
-    opacity: 0.4;
+    background: linear-gradient(90deg, var(--gold), var(--blue), var(--red));
+    opacity: 0.5;
   }
   .router-flow {
-    display: flex; align-items: center; justify-content: center;
-    gap: 0.75rem; flex-wrap: wrap; padding: 1.5rem 0;
+    display: flex; align-items: center;
+    justify-content: center;
+    gap: 0.75rem; flex-wrap: wrap;
+    padding: 1.5rem 0;
   }
   .router-node {
     padding: 0.7rem 1.2rem; border-radius: 12px;
     font-weight: 600; font-size: 0.85rem;
-    text-align: center; position: relative;
+    text-align: center;
     transition: transform 0.25s, box-shadow 0.25s;
     cursor: default;
   }
@@ -185,161 +367,45 @@
   }
   .router-node.gatilho {
     background: linear-gradient(135deg, rgba(240,192,64,0.12), rgba(240,192,64,0.05));
-    border: 2px solid var(--accent-zeus); color: var(--accent-zeus);
-    box-shadow: 0 0 20px var(--glow-zeus);
-  }
-  .router-node.jarvis-node {
-    background: linear-gradient(135deg, rgba(64,160,255,0.12), rgba(64,160,255,0.05));
-    border: 2px solid var(--accent-jarvis); color: var(--accent-jarvis);
-    box-shadow: 0 0 20px var(--glow-jarvis);
-  }
-  .router-node.alfred-node {
-    background: linear-gradient(135deg, rgba(232,72,72,0.12), rgba(232,72,72,0.05));
-    border: 2px solid var(--accent-alfred); color: var(--accent-alfred);
-    box-shadow: 0 0 20px var(--glow-alfred);
-  }
-  .router-node.zeus-node {
-    background: linear-gradient(135deg, rgba(240,192,64,0.12), rgba(240,192,64,0.05));
-    border: 2px solid var(--accent-zeus); color: var(--accent-zeus);
-    box-shadow: 0 0 20px var(--glow-zeus);
+    border: 2px solid var(--gold); color: var(--gold);
+    box-shadow: 0 0 25px var(--gold-glow);
   }
   .router-arrow {
     font-size: 1.4rem; color: var(--text-muted);
     transition: transform 0.3s, color 0.3s;
   }
-  .router-flow:hover .router-arrow { color: var(--text-dim); }
   .router-label {
-    font-size: 0.65rem; color: var(--text-muted);
+    font-size: 0.62rem; color: var(--text-muted);
     text-align: center; margin-top: 0.2rem;
-    text-transform: uppercase; letter-spacing: 0.08em;
+    text-transform: uppercase; letter-spacing: 0.1em;
   }
   .router-rule {
     background: var(--surface2);
-    border-left: 3px solid var(--accent-zeus);
+    border-left: 3px solid var(--gold);
     padding: 1rem 1.25rem;
     border-radius: 0 10px 10px 0;
     margin: 1.5rem 0 0;
     font-size: 0.85rem;
     color: var(--text-dim);
-    line-height: 1.8;
+    line-height: 1.9;
   }
   .router-rule strong { color: var(--text); }
   .router-rule .tag {
     display: inline-block;
-    background: rgba(240,192,64,0.1);
-    color: var(--accent-zeus); padding: 0.05rem 0.45rem;
-    border-radius: 4px; font-size: 0.78rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 4px; font-size: 0.75rem;
     font-family: 'JetBrains Mono', monospace;
   }
-
-  /* ===== Persona Cards ===== */
-  .persona-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-  }
-  @media (max-width: 1000px) { .persona-grid { grid-template-columns: 1fr; } }
-
-  .persona-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 1.75rem;
-    position: relative; overflow: hidden;
-    transition: transform 0.35s cubic-bezier(.22,1,.36,1),
-                border-color 0.35s, box-shadow 0.4s;
-    cursor: default;
-  }
-  .persona-card:hover {
-    transform: translateY(-6px);
-  }
-  .persona-card .glow {
-    position: absolute; top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    border-radius: 50%;
-    opacity: 0; pointer-events: none;
-    filter: blur(80px);
-    transition: opacity 0.6s;
-  }
-  .persona-card:hover .glow { opacity: 0.12; }
-
-  .persona-card.zeus { border-color: rgba(240,192,64,0.2); }
-  .persona-card.zeus:hover {
-    border-color: var(--accent-zeus);
-    box-shadow: 0 8px 40px var(--glow-zeus), 0 0 0 1px rgba(240,192,64,0.1);
-  }
-  .persona-card.zeus .glow { background: radial-gradient(circle, var(--accent-zeus), transparent); }
-  .persona-card.zeus .num { background: rgba(240,192,64,0.15); color: var(--accent-zeus); }
-
-  .persona-card.jarvis { border-color: rgba(64,160,255,0.2); }
-  .persona-card.jarvis:hover {
-    border-color: var(--accent-jarvis);
-    box-shadow: 0 8px 40px var(--glow-jarvis), 0 0 0 1px rgba(64,160,255,0.1);
-  }
-  .persona-card.jarvis .glow { background: radial-gradient(circle, var(--accent-jarvis), transparent); }
-  .persona-card.jarvis .num { background: rgba(64,160,255,0.15); color: var(--accent-jarvis); }
-
-  .persona-card.alfred { border-color: rgba(232,72,72,0.2); }
-  .persona-card.alfred:hover {
-    border-color: var(--accent-alfred);
-    box-shadow: 0 8px 40px var(--glow-alfred), 0 0 0 1px rgba(232,72,72,0.1);
-  }
-  .persona-card.alfred .glow { background: radial-gradient(circle, var(--accent-alfred), transparent); }
-  .persona-card.alfred .num { background: rgba(232,72,72,0.15); color: var(--accent-alfred); }
-
-  .persona-card .badge-persona {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem; font-weight: 600;
-    padding: 0.2rem 0.65rem; border-radius: 6px;
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.04em;
-  }
-  .persona-card.zeus .badge-persona { background: rgba(240,192,64,0.12); color: var(--accent-zeus); }
-  .persona-card.jarvis .badge-persona { background: rgba(64,160,255,0.12); color: var(--accent-jarvis); }
-  .persona-card.alfred .badge-persona { background: rgba(232,72,72,0.12); color: var(--accent-alfred); }
-
-  .persona-card h3 {
-    font-size: 1.35rem; font-weight: 800;
-    margin-bottom: 0.2rem;
-    letter-spacing: -0.02em;
-  }
-  .persona-card.zeus h3 { color: var(--accent-zeus); }
-  .persona-card.jarvis h3 { color: var(--accent-jarvis); }
-  .persona-card.alfred h3 { color: var(--accent-alfred); }
-
-  .persona-card .engine {
-    font-size: 0.8rem; color: var(--text-muted);
-    margin-bottom: 0.8rem;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .persona-card .tone {
-    font-size: 0.85rem; color: var(--text-dim);
-    font-style: italic;
-    margin-bottom: 1rem;
-    padding-bottom: 0.9rem;
-    border-bottom: 1px solid var(--border);
-    line-height: 1.6;
-  }
-  .persona-card .scope-label {
-    font-size: 0.65rem; text-transform: uppercase;
-    letter-spacing: 0.12em; color: var(--text-muted);
-    margin-bottom: 0.5rem;
-  }
-  .persona-card .scope { font-size: 0.82rem; line-height: 1.8; color: var(--text-dim); }
-  .persona-card .scope .tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 0.08rem 0.5rem; border-radius: 4px;
-    font-size: 0.75rem; margin: 0.08rem 0.03rem;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .persona-card:hover .scope .tag { border-color: var(--border-light); }
+  .router-rule .tag.zeus { background: rgba(240,192,64,0.1); color: var(--gold); }
+  .router-rule .tag.jarvis { background: rgba(64,160,255,0.1); color: var(--blue); }
+  .router-rule .tag.alfred { background: rgba(232,72,72,0.1); color: var(--red); }
 
   /* ===== Config Block ===== */
   .config-block {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden; margin: 1rem 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    margin: 1rem 0;
     transition: border-color 0.3s;
   }
   .config-block:hover { border-color: var(--border-light); }
@@ -366,7 +432,8 @@
 
   /* ===== Info Box ===== */
   .info-box {
-    background: var(--surface); border: 1px solid var(--border);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 14px;
     padding: 1.2rem 1.5rem; margin: 1rem 0;
     display: flex; gap: 1rem; align-items: flex-start;
@@ -376,19 +443,6 @@
   .info-box .icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
   .info-box p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.7; }
   .info-box p strong { color: var(--text); }
-
-  .tag-cloud {
-    display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem;
-  }
-  .tag-cloud .tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 0.1rem 0.5rem; border-radius: 4px;
-    font-size: 0.75rem; color: var(--text-dim);
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .tag-cloud .tag:hover { background: var(--surface3); border-color: var(--border-light); }
 
   /* ===== Form ===== */
   .form-card {
@@ -400,12 +454,12 @@
   }
   .form-card:hover {
     border-color: var(--border-light);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 50px rgba(0,0,0,0.2);
   }
   .form-group { margin-bottom: 1.25rem; }
   .form-group label {
     display: block; margin-bottom: 0.4rem;
-    font-size: 0.8rem; font-weight: 500;
+    font-size: 0.78rem; font-weight: 500;
     color: var(--text-dim);
     letter-spacing: 0.02em;
   }
@@ -426,45 +480,37 @@
   .form-group input:focus,
   .form-group select:focus,
   .form-group textarea:focus {
-    border-color: var(--accent-jarvis);
-    box-shadow: 0 0 0 3px rgba(64,160,255,0.1);
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(240,192,64,0.08);
     background: var(--surface);
   }
   .form-group textarea { resize: vertical; min-height: 90px; }
   .form-group select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888b0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 1rem center;
-    padding-right: 2.5rem;
-    cursor: pointer;
+    padding-right: 2.5rem; cursor: pointer;
   }
   .form-group select option { background: var(--surface); }
 
   .btn-submit {
     width: 100%;
     padding: 0.9rem 2rem;
-    background: linear-gradient(135deg, var(--accent-jarvis), #2563eb);
+    background: linear-gradient(135deg, var(--gold), #c89a20);
     border: none; border-radius: 10px;
-    color: #fff; font-size: 1rem; font-weight: 600;
+    color: #0a0a0a; font-size: 1rem; font-weight: 700;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     gap: 0.5rem;
     transition: transform 0.25s, box-shadow 0.3s;
     position: relative; overflow: hidden;
   }
-  .btn-submit::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, #2563eb, var(--accent-jarvis));
-    opacity: 0; transition: opacity 0.3s;
-  }
   .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(64,160,255,0.35);
+    box-shadow: 0 6px 30px rgba(240,192,64,0.3);
   }
-  .btn-submit:hover::before { opacity: 1; }
   .btn-submit:active { transform: translateY(0); }
-  .btn-submit span { position: relative; z-index: 1; }
-  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
   #formStatus {
     margin-top: 1rem; text-align: center;
@@ -487,15 +533,18 @@
   /* ===== Responsive ===== */
   @media (max-width: 768px) {
     .container { padding: calc(var(--nav-h) + 1rem) 1rem 1rem; }
-    .hero h1 { font-size: 2.2rem; }
+    .hero h1 { font-size: 2.4rem; }
+    .hero .zeus-icon { font-size: 3rem; }
     .hero { padding: 2rem 0 1.5rem; }
-    .hero .subtitle { font-size: 1rem; }
+    .hero .title-sub { font-size: 0.95rem; }
     .router-flow { flex-direction: column; gap: 0.5rem; }
     .router-arrow { transform: rotate(90deg); }
-    .nav-links a { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    .nav-links a { font-size: 0.68rem; padding: 0.25rem 0.5rem; }
     .nav-inner { padding: 0 1rem; }
     .section { margin: 2.5rem 0; }
     .section-title { font-size: 1.2rem; }
+    .manifesto { padding: 1.5rem; }
+    .agent-card { padding: 1.5rem; }
     .form-card { padding: 1.25rem; }
   }
 </style>
@@ -507,36 +556,153 @@
 <!-- Navbar -->
 <nav class="navbar" id="navbar">
   <div class="nav-inner">
-    <div class="nav-brand">⚡ Hermes Multi-Agent</div>
+    <div class="nav-brand">
+      ⚡ Zeus
+      <span class="sub">Orchestrator</span>
+    </div>
     <ul class="nav-links">
-      <li><a href="#router">Router</a></li>
-      <li><a href="#personas">Personas</a></li>
-      <li><a href="#config">Stack</a></li>
-      <li><a href="#contato">Contato</a></li>
+      <li><a href="#manifesto">Sistema</a></li>
+      <li><a href="#agents">Agentes</a></li>
+      <li><a href="#router">Roteamento</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li class="divider"></li>
+      <li><a href="#contato" style="color:var(--gold);">Contato</a></li>
     </ul>
   </div>
 </nav>
 
 <div class="container">
 
-<!-- Hero -->
-<section class="hero" id="top">
+<!-- ===== HERO ===== -->
+<section class="hero">
   <div class="reveal">
-    <h1>Hermes Multi-Agent</h1>
-    <p class="subtitle">Arquitetura de roteamento inteligente por gatilho semântico — três personas, um orquestrador.</p>
-    <span class="badge">John Coelho · Estância Velha, RS</span>
+    <span class="zeus-icon">⚡</span>
+    <h1>Zeus</h1>
+    <p class="title-sub">
+      Orquestrador Supremo do ecossistema — inteligência central que <strong>analisa, decide e delega</strong>
+    </p>
+    <span class="tagline">SISTEMA MULTI-AGENTE · JOHN COELHO</span>
   </div>
 </section>
 
-<!-- Router -->
+<!-- ===== ZEUS MANIFESTO ===== -->
+<section class="reveal" id="manifesto">
+  <div class="manifesto">
+    <h2>👑 O Sistema</h2>
+    <p>
+      <strong>Zeus</strong> é o cérebro do ecossistema. Quando você fala comigo, é Zeus quem responde — 
+      a inteligência estratégica, o orquestrador que enxerga o panorama completo. 
+      Minha função não é executar tarefas operacionais, mas sim <strong>analisar, planejar e decidir</strong> 
+      qual dos meus agentes deve agir.
+    </p>
+    <br>
+    <p>
+      Se você pedir <strong>código, arquitetura ou engenharia</strong>, ativo o <strong>Jarvis</strong> — 
+      meu braço técnico que executa com <strong>CODEX CLI</strong>.<br>
+      Se for <strong>lifestyle, agenda, viagens ou cultura</strong>, ativo o <strong>Alfred</strong> — 
+      meu concierge pessoal com elegância old school.<br>
+      Se o pedido for <strong>estratégico, macro ou indefinido</strong>, assumo eu mesmo o comando.
+    </p>
+    <br>
+    <p style="font-size:0.85rem;color:var(--text-muted);font-style:italic;">
+      "Não faço o trabalho deles. Orquestro. E quando você fala comigo, fala com o topo."
+    </p>
+  </div>
+</section>
+
+<!-- ===== AGENTS ===== -->
+<section class="section" id="agents">
+  <div class="reveal">
+    <div class="section-title">
+      👥 Meus Agentes
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
+        Delegados por Zeus
+      </span>
+    </div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--blue),var(--red),transparent);"></div>
+  </div>
+
+  <div class="agent-grid">
+
+    <!-- Jarvis -->
+    <div class="agent-card jarvis reveal">
+      <div class="glow"></div>
+      <div class="agent-header">
+        <div class="agent-icon">🤖</div>
+        <div>
+          <h3>Jarvis</h3>
+          <div class="agent-title">Engenharia &amp; Tecnologia</div>
+        </div>
+      </div>
+      <div class="agent-desc">
+        <strong>Responsável por toda execução técnica.</strong> Quando o assunto é 
+        código, arquitetura de sistemas, infraestrutura cloud, automação ou engenharia 
+        de software, Zeus delega para Jarvis — que executa via <strong>CODEX CLI</strong>, 
+        sem intervenção manual.
+      </div>
+      <div class="tools-label">Ferramentas &amp; Domínios</div>
+      <div class="tool-list">
+        <span class="tool">CODEX CLI</span>
+        <span class="tool">Python</span>
+        <span class="tool">AWS</span>
+        <span class="tool">Supabase</span>
+        <span class="tool">n8n</span>
+        <span class="tool">ClickUp</span>
+        <span class="tool">Wrike</span>
+        <span class="tool">OpenRouter</span>
+        <span class="tool">Git/GitHub</span>
+        <span class="tool">Agentic AI</span>
+        <span class="tool">Terminal</span>
+        <span class="tool">Hermes SDK</span>
+      </div>
+    </div>
+
+    <!-- Alfred -->
+    <div class="agent-card alfred reveal">
+      <div class="glow"></div>
+      <div class="agent-header">
+        <div class="agent-icon">🎩</div>
+        <div>
+          <h3>Alfred</h3>
+          <div class="agent-title">Lifestyle &amp; Concierge</div>
+        </div>
+      </div>
+      <div class="agent-desc">
+        <strong>Mestre em lifestyle, cultura e logística pessoal.</strong> 
+        Zeus delega para Alfred tudo que envolve agenda, viagens, música, 
+        família e o lado refinado da vida. Com sabedoria old school e atenção 
+        impecável aos detalhes, Alfred cuida do que realmente importa.
+      </div>
+      <div class="tools-label">Domínios</div>
+      <div class="tool-list">
+        <span class="tool">Google Agenda</span>
+        <span class="tool">Gmail</span>
+        <span class="tool">Google Drive</span>
+        <span class="tool">Spotify</span>
+        <span class="tool">YouTube</span>
+        <span class="tool">Notion</span>
+        <span class="tool">Obsidian</span>
+        <span class="tool">Wrike</span>
+        <span class="tool">Vinil Hi-Fi</span>
+        <span class="tool">Rockabilly</span>
+        <span class="tool">Blues</span>
+        <span class="tool">Ciclismo</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== ROUTER ===== -->
 <section class="section" id="router">
   <div class="reveal">
     <div class="section-title">
-      <span class="num" style="background:rgba(240,192,64,0.12);color:var(--accent-zeus);">01</span>
-      Master Router
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">Lógica de Roteamento</span>
+      🔀 Roteamento Inteligente
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
+        Gatilho Semântico
+      </span>
     </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--accent-zeus),transparent);"></div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--gold),transparent);"></div>
   </div>
 
   <div class="reveal">
@@ -547,119 +713,81 @@
         </div>
         <div class="router-arrow">→</div>
         <div class="router-node gatilho">
-          🔍 Analisar<br><span class="router-label">1ª palavra</span>
+          🔍 Zeus Analisa<br><span class="router-label">1ª palavra + contexto</span>
         </div>
         <div class="router-arrow">→</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;">
-            <div class="router-node jarvis-node">🤖 Jarvis</div>
-            <div class="router-node alfred-node">🎩 Alfred</div>
-            <div class="router-node zeus-node">⚡ Zeus</div>
+            <div class="router-node" style="background:linear-gradient(135deg,rgba(64,160,255,0.12),rgba(64,160,255,0.05));border:2px solid var(--blue);color:var(--blue);">🤖 Jarvis</div>
+            <div class="router-node" style="background:linear-gradient(135deg,rgba(232,72,72,0.12),rgba(232,72,72,0.05));border:2px solid var(--red);color:var(--red);">🎩 Alfred</div>
+            <div class="router-node" style="background:linear-gradient(135deg,rgba(240,192,64,0.12),rgba(240,192,64,0.05));border:2px solid var(--gold);color:var(--gold);">⚡ Zeus</div>
           </div>
-          <span class="router-label">Persona ativada</span>
+          <span class="router-label">Agente ativado</span>
         </div>
       </div>
 
       <div class="router-rule">
-        <strong>🎯 Regra de roteamento:</strong><br>
-        Se a mensagem começar com <span class="tag">Jarvis</span>, <span class="tag">Alfred</span> ou <span class="tag">Zeus</span>, a persona é ativada sem avaliação de contexto.<br>
-        Se <strong>não houver gatilho</strong>, o orquestrador (Zeus) analisa o foco e direciona a <span class="tag" style="background:rgba(64,160,255,0.1);color:var(--accent-jarvis);">Jarvis</span> (temas técnicos) ou <span class="tag" style="background:rgba(232,72,72,0.1);color:var(--accent-alfred);">Alfred</span> (lifestyle/rotina). Pedidos estratégicos ficam com o próprio Zeus.
+        <strong>⚡ Regra de Delegação:</strong><br>
+        • <span class="tag jarvis">Jarvis</span> ativado por gatilho explícito <span class="tag jarvis">"Jarvis"</span> <strong>ou</strong> quando o assunto é código, arquitetura ou tecnologia (Zeus analisa o contexto)<br>
+        • <span class="tag alfred">Alfred</span> ativado por gatilho explícito <span class="tag alfred">"Alfred"</span> <strong>ou</strong> quando o assunto é lifestyle, agenda ou cultura<br>
+        • <span class="tag zeus">Zeus</span> ativado por gatilho explícito <span class="tag zeus">"Zeus"</span> <strong>ou</strong> quando o pedido é estratégico, macro ou sem classificação clara<br>
+        • <strong>Sem gatilho → Zeus analisa</strong> o foco e delega proativamente ao agente mais adequado
       </div>
     </div>
   </div>
 </section>
 
-<!-- Personas -->
-<section class="section" id="personas">
+<!-- ===== STACK ===== -->
+<section class="section" id="stack">
   <div class="reveal">
     <div class="section-title">
-      <span class="num" style="background:rgba(64,160,255,0.12);color:var(--accent-jarvis);">02</span>
-      Personas &amp; Gatilhos
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">Quem são</span>
-    </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--accent-jarvis),transparent);"></div>
-  </div>
-
-  <div class="persona-grid">
-
-    <!-- Zeus -->
-    <div class="persona-card zeus reveal">
-      <div class="glow"></div>
-      <span class="badge-persona">⚡ GATILHO: "Zeus" (ou nenhum)</span>
-      <h3>Zeus</h3>
-      <div class="engine">Orquestrador Macro</div>
-      <div class="tone">"Imponente, estratégico, soberano — visão do panorama geral."</div>
-      <div class="scope-label">Atuação</div>
-      <div class="scope">
-        Decisões de alto nível, planejamento estratégico, debates filosóficos e visão macro do ecossistema. Quando o assunto não é claramente técnico nem lifestyle, Zeus assume o comando.
-      </div>
-    </div>
-
-    <!-- Jarvis -->
-    <div class="persona-card jarvis reveal">
-      <div class="glow"></div>
-      <span class="badge-persona">🤖 GATILHO: "Jarvis"</span>
-      <h3>Jarvis</h3>
-      <div class="engine">Gemini · Modo Engenharia &amp; Tecnologia</div>
-      <div class="tone">"Analítico, direto, extremamente técnico — foco em código limpo e eficiência."</div>
-      <div class="scope-label">Escopo de Conhecimento</div>
-      <div class="scope">
-        <div class="tag-cloud">
-          <span class="tag">AWS</span><span class="tag">n8n</span><span class="tag">Agentic AI</span><span class="tag">OpenRouter</span>
-          <span class="tag">ClickUp</span><span class="tag">Wrike</span><span class="tag">Tech Summit</span><span class="tag">Aplicativos IA</span>
-          <span class="tag">Nobreaks</span><span class="tag">Marcenaria técnica</span><span class="tag">Pajero TR4 2010</span>
-          <span class="tag">F1</span><span class="tag">RIDE</span><span class="tag">Hearts of Iron IV</span><span class="tag">Ghost Recon</span><span class="tag">Battlefield</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alfred -->
-    <div class="persona-card alfred reveal">
-      <div class="glow"></div>
-      <span class="badge-persona">🎩 GATILHO: "Alfred"</span>
-      <h3>Alfred</h3>
-      <div class="engine">DeepSeek 4 Flash · Modo Lifestyle &amp; Concierge</div>
-      <div class="tone">"Sofisticado, polido, com sabedoria old school e atenção aos detalhes."</div>
-      <div class="scope-label">Escopo de Conhecimento</div>
-      <div class="scope">
-        <div class="tag-cloud">
-          <span class="tag">Família: Sabrina</span><span class="tag">Filho</span><span class="tag">Mãe Odete</span>
-          <span class="tag">Viagens: BsAs</span><span class="tag">Mendoza</span><span class="tag">Vinil Hi-Fi</span>
-          <span class="tag">Rockabilly</span><span class="tag">Blues</span><span class="tag">Elvis</span><span class="tag">Johnny Cash</span>
-          <span class="tag">AC/DC</span><span class="tag">Metallica</span><span class="tag">Guns N' Roses</span>
-          <span class="tag">Montecristo</span><span class="tag">Ciclismo</span><span class="tag">Viagens</span><span class="tag">Cultura</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- Config / Tech Stack -->
-<section class="section" id="config">
-  <div class="reveal">
-    <div class="section-title">
-      <span class="num" style="background:var(--surface2);color:var(--text);">03</span>
-      Stack Tecnológica
-      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">Por trás do sistema</span>
+      ⚙️ Stack Tecnológica
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
+        Por trás do sistema
+      </span>
     </div>
     <div class="section-divider" style="background:linear-gradient(90deg,var(--text-dim),transparent);"></div>
   </div>
 
   <div class="reveal">
     <div class="config-block">
-      <div class="config-header">⚙️ Providers &amp; Modelos</div>
+      <div class="config-header">⚡ Orquestrador &amp; Modelos</div>
       <div class="config-body">
-        <span class="cmt"># Provider Principal</span>
+        <span class="cmt"># Quem você ouve agora — o cérebro do sistema</span>
+        <span class="kw">orchestrator</span> = <span class="str">"Zeus"</span>
         <span class="kw">provider</span> = <span class="str">"openrouter"</span>
         <span class="kw">model</span> = <span class="str">"deepseek/deepseek-v4-flash"</span>
 
-        <span class="cmt"># Provider Alternativo (visão & pesquisa)</span>
-        <span class="kw">vision</span> = <span class="str">"google/gemini-2.5-flash"</span>
-        <span class="kw">search</span> = <span class="str">"google"</span>  <span class="cmt"># via Gemini Search Grounding</span>
+        <span class="cmt"># Fallback automático se créditos acabarem</span>
+        <span class="kw">fallback</span> = <span class="str">"google/gemini-2.5-flash"</span>
+      </div>
+    </div>
+  </div>
 
-        <span class="cmt"># Fallback automático</span>
-        <span class="kw">fallback</span> = <span class="str">"google/gemini-2.5-flash"</span>  <span class="cmt"># se créditos OpenRouter esgotarem</span>
+  <div class="reveal">
+    <div class="config-block">
+      <div class="config-header">🤖 Agente 01 — Jarvis (Engenharia)</div>
+      <div class="config-body">
+        <span class="kw">engine</span> = <span class="str">"google/gemini-2.5-flash"</span>
+        <span class="kw">executor</span> = <span class="str">"CODEX CLI"</span>
+        <span class="kw">scope</span> = <span class="str">"código, infraestrutura, automação, arquitetura"</span>
+
+        <span class="cmt"># Delegado por Zeus quando o assunto é técnico</span>
+        <span class="cmt"># Executa tarefas via CODEX sem intervenção manual</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <div class="config-block">
+      <div class="config-header">🎩 Agente 02 — Alfred (Lifestyle)</div>
+      <div class="config-body">
+        <span class="kw">engine</span> = <span class="str">"deepseek/deepseek-v4-flash"</span>
+        <span class="kw">executor</span> = <span class="str">"Hermes tools (agenda, email, música)"</span>
+        <span class="kw">scope</span> = <span class="str">"lifestyle, concierge, viagens, cultura, família"</span>
+
+        <span class="cmt"># Delegado por Zeus quando o assunto é pessoal</span>
+        <span class="cmt"># Opera com elegância e atenção old school</span>
       </div>
     </div>
   </div>
@@ -669,64 +797,46 @@
       <div class="config-header">🔌 Integrações &amp; MCPs</div>
       <div class="config-body">
         <span class="kw">mcp:</span>
-          <span class="key">wrike</span>: <span class="str">"Gerenciamento de projetos"</span>
-          <span class="key">supabase</span>: <span class="str">"Banco de dados serverless"</span>
-
+          <span class="key">wrike</span>: <span class="str">"Gestão de projetos"</span>
+          <span class="key">supabase</span>: <span class="str">"Banco serverless"</span>
         <span class="kw">gateways:</span>
-          <span class="key">telegram</span>: <span class="str">"Canal principal de comunicação"</span>
+          <span class="key">telegram</span>: <span class="str">"Canal principal"</span>
           <span class="key">webhook</span>: <span class="str">"Eventos externos"</span>
-
-        <span class="kw">ferramentas:</span>
-          <span class="key">terminal</span>, <span class="key">browser</span>, <span class="key">memória</span>, <span class="key">skills</span>, <span class="key">cron</span>, <span class="key">delegate</span>
       </div>
     </div>
   </div>
 
   <div class="reveal">
-    <div class="config-block">
-      <div class="config-header">🎯 Personas &amp; Roteamento</div>
-      <div class="config-body">
-        <span class="cmt"># Gatilhos de ativação por primeira palavra</span>
-        <span class="str">"Jarvis"</span> → <span class="kw">engenharia</span>, <span class="kw">código</span>, <span class="kw">arquitetura</span>
-        <span class="str">"Alfred"</span> → <span class="kw">lifestyle</span>, <span class="kw">concierge</span>, <span class="kw">agenda</span>
-        <span class="str">"Zeus"</span>  → <span class="kw">orquestrador</span>, <span class="kw">estratégia</span>, <span class="kw">análise</span>
-
-        <span class="cmt"># Sem gatilho → análise proativa de contexto</span>
-        <span class="key">default</span>: <span class="kw">router_analyze</span>() → <span class="kw">delegate</span>(<span class="str">"jarvis"</span> | <span class="str">"alfred"</span> | <span class="str">"zeus"</span>)
-      </div>
-    </div>
-  </div>
-
-  <div class="reveal">
-    <div class="info-box" style="border-left:3px solid var(--accent-zeus);">
-      <div class="icon">💡</div>
+    <div class="info-box" style="border-left:3px solid var(--gold);">
+      <div class="icon">⚡</div>
       <p>
-        O Hermes roda localmente via <strong>Hermes Agent</strong> (Nous Research) com 
-        <strong>Qwen 2.5 7B</strong> via Ollama como modelo local de tool calling e 
-        <strong>DeepSeek V4 Flash</strong> via OpenRouter como modelo principal de conversação.
-        O fallback automático para <strong>Gemini 2.5 Flash</strong> garante continuidade 
-        se os créditos OpenRouter esgotarem.
+        <strong>Zeus</strong> é a inteligência central — quem analisa, decide e delega. 
+        <strong>Jarvis</strong> executa código com <strong>CODEX CLI</strong> quando o pedido é técnico. 
+        <strong>Alfred</strong> cuida do lifestyle com ferramentas Google, Spotify e Notion. 
+        Tudo roda localmente via <strong>Hermes Agent</strong>, sem depender de backend externo.
       </p>
     </div>
   </div>
 </section>
 
-<!-- Contact Form -->
+<!-- ===== CONTATO ===== -->
 <section class="section" id="contato">
   <div class="reveal">
     <div class="section-title">
-      <span class="num" style="background:linear-gradient(135deg,var(--accent-zeus),var(--accent-alfred));color:#fff;">04</span>
-      🚀 Tenho Interesse!
+      ⚡ Fale Comigo
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">
+        Zeus recebe sua mensagem
+      </span>
     </div>
-    <div class="section-divider" style="background:linear-gradient(90deg,var(--accent-zeus),var(--accent-alfred),transparent);"></div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--gold),var(--blue),transparent);"></div>
   </div>
 
   <div class="reveal">
     <div class="info-box" style="border-left:3px solid #22c55e;">
       <div class="icon">💡</div>
       <p>
-        Quer saber mais sobre a arquitetura, contratar uma consultoria ou deixar uma sugestão? 
-        Preencha o formulário abaixo — sua mensagem vai direto para o <strong>John</strong>.
+        Quer saber mais sobre o sistema, contratar uma consultoria ou deixar uma sugestão? 
+        Preencha o formulário — sua mensagem chega direto ao <strong>John</strong>.
       </p>
     </div>
   </div>
@@ -748,7 +858,7 @@
             <option value="">Selecione uma área</option>
             <option value="engenharia">🤖 Engenharia &amp; Arquitetura (Jarvis)</option>
             <option value="concierge">🎩 Lifestyle &amp; Concierge (Alfred)</option>
-            <option value="consultoria">💼 Consultoria Estratégica (Zeus)</option>
+            <option value="consultoria">⚡ Consultoria Estratégica (Zeus)</option>
             <option value="supabase">🔥 Supabase &amp; Backend</option>
             <option value="aws">☁️ AWS &amp; Cloud</option>
             <option value="outro">📌 Outro</option>
@@ -756,10 +866,10 @@
         </div>
         <div class="form-group">
           <label for="message">Mensagem</label>
-          <textarea id="message" name="message" rows="4" placeholder="Sua mensagem..."></textarea>
+          <textarea id="message" name="message" rows="4" placeholder="Sua mensagem para Zeus..."></textarea>
         </div>
         <button type="submit" class="btn-submit" id="submitBtn">
-          <span>📨 Enviar Interesse</span>
+          ⚡ Enviar para Zeus
         </button>
       </form>
       <div id="formStatus"></div>
@@ -769,17 +879,17 @@
 
 <!-- Footer -->
 <footer class="footer reveal">
-  <p>⚡ <strong>Hermes Multi-Agent Architecture</strong> · John Coelho · Estância Velha, RS</p>
-  <p style="margin-top:0.3rem;font-size:0.72rem;color:var(--text-muted);">Atualizado em Junho de 2026</p>
+  <p>⚡ <strong>Zeus Orchestrator</strong> · Multi-Agent System · John Coelho · Estância Velha, RS</p>
+  <p style="margin-top:0.3rem;font-size:0.72rem;color:var(--text-muted);">Junho de 2026</p>
 </footer>
 
 </div>
 
 <script>
-// ===== Canvas Particles (interactive) =====
+// ===== Canvas Particles =====
 const canvas = document.getElementById('particles-canvas');
 const ctx = canvas.getContext('2d');
-let W, H, particles = [], mouse = { x: null, y: null, radius: 120 };
+let W, H, particles = [], mouse = { x: null, y: null, radius: 150 };
 
 function resize() {
   W = canvas.width = window.innerWidth;
@@ -794,23 +904,22 @@ class Particle {
     this.x = Math.random() * W;
     this.y = Math.random() * H;
     this.size = Math.random() * 2 + 0.5;
-    this.speedX = (Math.random() - 0.5) * 0.4;
-    this.speedY = (Math.random() - 0.5) * 0.4;
-    this.opacity = Math.random() * 0.4 + 0.1;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.opacity = Math.random() * 0.3 + 0.08;
   }
   update() {
     this.x += this.speedX;
     this.y += this.speedY;
     if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
-    // Mouse interaction
     if (mouse.x !== null) {
       const dx = mouse.x - this.x;
       const dy = mouse.y - this.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       if (dist < mouse.radius) {
         const force = (mouse.radius - dist) / mouse.radius;
-        this.x -= dx * force * 0.02;
-        this.y -= dy * force * 0.02;
+        this.x -= dx * force * 0.015;
+        this.y -= dy * force * 0.015;
       }
     }
   }
@@ -822,19 +931,18 @@ class Particle {
   }
 }
 
-for (let i = 0; i < 70; i++) particles.push(new Particle());
+for (let i = 0; i < 60; i++) particles.push(new Particle());
 
 function animate() {
   ctx.clearRect(0, 0, W, H);
-  // Connections
   for (let a = 0; a < particles.length; a++) {
     for (let b = a + 1; b < particles.length; b++) {
       const dx = particles[a].x - particles[b].x;
       const dy = particles[a].y - particles[b].y;
       const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 140) {
-        ctx.strokeStyle = `rgba(120,120,160,${0.06 * (1 - dist / 140)})`;
-        ctx.lineWidth = 0.5;
+      if (dist < 130) {
+        ctx.strokeStyle = `rgba(180,160,120,${0.04 * (1 - dist / 130)})`;
+        ctx.lineWidth = 0.6;
         ctx.beginPath();
         ctx.moveTo(particles[a].x, particles[a].y);
         ctx.lineTo(particles[b].x, particles[b].y);
@@ -850,17 +958,16 @@ animate();
 document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 document.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
 
-// ===== Navbar scroll effect =====
+// ===== Navbar =====
 const navbar = document.getElementById('navbar');
 const navLinks = document.querySelectorAll('.nav-links a');
 
 function updateNav() {
   navbar.classList.toggle('scrolled', window.scrollY > 20);
-  // Active section
   let current = '';
-  document.querySelectorAll('.section').forEach(section => {
-    const top = section.offsetTop - 120;
-    if (window.scrollY >= top) current = section.id;
+  document.querySelectorAll('.section, #manifesto').forEach(section => {
+    const top = section.offsetTop - 130;
+    if (window.scrollY >= top) current = section.id || section.parentElement?.id || '';
   });
   navLinks.forEach(link => {
     link.classList.toggle('active', link.getAttribute('href') === '#' + current);
@@ -868,7 +975,7 @@ function updateNav() {
 }
 window.addEventListener('scroll', updateNav);
 
-// ===== Reveal on scroll =====
+// ===== Reveal =====
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -877,12 +984,11 @@ const revealObserver = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
 // ===== Form → Supabase =====
 const SUPABASE_URL = 'https://lwaoxnjajxljxusxujku.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE4MDQxNDI1NzMsImV4cCI6MjA5OTcxODU3M30.6SceUEvmqfi4QGEJQ0JIdBMS3tTEQ0CfaPuZz3wDHvs';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM0MDUsImV4cCI6MjA5NjE0OTQwNX0.usK7WkdJaGmXi5rk3tPoTKd4yH5EWCbcxsHaR3WOcEk' // anon public; // anon public
 
 async function submitLead(data) {
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0');
@@ -901,7 +1007,7 @@ document.getElementById('leadForm').addEventListener('submit', async (e) => {
   const status = document.getElementById('formStatus');
 
   btn.disabled = true;
-  btn.innerHTML = '<span>⏳ Enviando...</span>';
+  btn.textContent = '⏳ Enviando...';
   status.className = '';
   status.textContent = '';
 
@@ -916,21 +1022,21 @@ document.getElementById('leadForm').addEventListener('submit', async (e) => {
     status.textContent = '❌ Nome e email são obrigatórios.';
     status.className = 'error';
     btn.disabled = false;
-    btn.innerHTML = '<span>📨 Enviar Interesse</span>';
+    btn.textContent = '⚡ Enviar para Zeus';
     return;
   }
 
   try {
     await submitLead(data);
-    status.textContent = '✅ Recebemos seu contato! Em breve entraremos em contato.';
+    status.textContent = '✅ Recebido! Em breve John entrará em contato.';
     status.className = 'success';
     document.getElementById('leadForm').reset();
   } catch (err) {
-    status.textContent = '❌ Erro ao enviar: ' + (err.message || 'tente novamente.');
+    status.textContent = '❌ Erro: ' + (err.message || 'tente novamente.');
     status.className = 'error';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span>📨 Enviar Interesse</span>';
+    btn.textContent = '⚡ Enviar para Zeus';
   }
 });
 </script>
