@@ -5,434 +5,585 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hermes Multi-Agent Architecture</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-  
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  
+  html { scroll-behavior: smooth; }
+
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a28;
-    --border: #2a2a3e;
-    --text: #e8e8f0;
-    --text-dim: #8888a0;
+    --bg: #07070d;
+    --surface: #0f0f1a;
+    --surface2: #181828;
+    --surface3: #22223a;
+    --border: #28283e;
+    --border-light: #3a3a54;
+    --text: #eeeef6;
+    --text-dim: #8888a8;
+    --text-muted: #6a6a88;
     --accent-zeus: #f0c040;
     --accent-jarvis: #40a0ff;
     --accent-alfred: #e84848;
-    --glow-zeus: rgba(240,192,64,0.15);
-    --glow-jarvis: rgba(64,160,255,0.15);
-    --glow-alfred: rgba(232,72,72,0.15);
+    --glow-zeus: rgba(240,192,64,0.08);
+    --glow-jarvis: rgba(64,160,255,0.08);
+    --glow-alfred: rgba(232,72,72,0.08);
+
+    --nav-h: 56px;
   }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
   body {
     font-family: 'Inter', -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.6;
+    line-height: 1.7;
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  /* Particles background */
-  #particles {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-  }
-  .particle {
-    position: absolute;
-    width: 3px; height: 3px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 50%;
-    animation: float linear infinite;
-  }
-  @keyframes float {
-    0% { transform: translateY(100vh) scale(0); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  /* ===== Canvas Particles ===== */
+  #particles-canvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
   }
 
+  /* ===== Navbar ===== */
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--nav-h); z-index: 100;
+    background: rgba(7,7,13,0.75);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    transition: border-color 0.3s;
+  }
+  .navbar.scrolled { border-color: var(--border-light); }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+  }
+  .nav-brand {
+    font-weight: 800; font-size: 0.95rem;
+    background: linear-gradient(135deg, var(--accent-zeus), var(--accent-alfred));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+  }
+  .nav-links { display: flex; gap: 0.25rem; list-style: none; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none;
+    font-size: 0.78rem; font-weight: 500;
+    padding: 0.35rem 0.75rem; border-radius: 6px;
+    transition: background 0.25s, color 0.25s;
+    letter-spacing: 0.02em;
+  }
+  .nav-links a:hover { background: var(--surface2); color: var(--text); }
+  .nav-links a.active { color: var(--accent-zeus); background: rgba(240,192,64,0.08); }
+
+  /* ===== Container ===== */
   .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    position: relative;
-    z-index: 1;
+    max-width: 1200px; margin: 0 auto;
+    padding: calc(var(--nav-h) + 2rem) 2rem 2rem;
+    position: relative; z-index: 1;
   }
 
-  /* Hero */
+  /* ===== Reveal ===== */
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ===== Hero ===== */
   .hero {
-    text-align: center;
-    padding: 4rem 0 3rem;
+    text-align: center; padding: 3.5rem 0 2.5rem;
     position: relative;
   }
   .hero::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 200px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-zeus), transparent);
+    content: ''; position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 240px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-zeus), var(--accent-alfred), transparent);
   }
   .hero h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    background: linear-gradient(135deg, var(--accent-zeus), var(--accent-jarvis), var(--accent-alfred));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 3.5rem; font-weight: 900;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--accent-zeus) 0%, var(--accent-jarvis) 50%, var(--accent-alfred) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
+    line-height: 1.15;
   }
   .hero .subtitle {
-    color: var(--text-dim);
-    font-size: 1.1rem;
-    margin-top: 0.75rem;
-    font-weight: 300;
+    color: var(--text-dim); font-size: 1.15rem;
+    margin-top: 0.8rem; font-weight: 300;
+    max-width: 600px; margin-inline: auto;
   }
   .hero .badge {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.35rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    font-size: 0.8rem;
-    color: var(--text-dim);
+    display: inline-block; margin-top: 1.2rem;
+    padding: 0.35rem 1.2rem;
+    border: 1px solid var(--border); border-radius: 100px;
+    font-size: 0.75rem; color: var(--text-muted);
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
   }
 
-  /* Section */
-  .section {
-    margin: 3rem 0;
-  }
+  /* ===== Section ===== */
+  .section { margin: 4rem 0; }
   .section-title {
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.5rem; font-weight: 800;
     margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    letter-spacing: -0.02em;
   }
   .section-title .num {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+  .section-divider {
+    height: 1px; max-width: 80px; margin: 0.5rem 0 1.5rem;
+    border-radius: 2px;
+  }
+
+  /* ===== Router Section ===== */
+  .router-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2rem;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .router-section:hover { border-color: var(--border-light); box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
+  .router-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-zeus), var(--accent-jarvis), var(--accent-alfred));
+    opacity: 0.4;
+  }
+  .router-flow {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.75rem; flex-wrap: wrap; padding: 1.5rem 0;
+  }
+  .router-node {
+    padding: 0.7rem 1.2rem; border-radius: 12px;
+    font-weight: 600; font-size: 0.85rem;
+    text-align: center; position: relative;
+    transition: transform 0.25s, box-shadow 0.25s;
+    cursor: default;
+  }
+  .router-node:hover { transform: translateY(-2px); }
+  .router-node.input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  }
+  .router-node.gatilho {
+    background: linear-gradient(135deg, rgba(240,192,64,0.12), rgba(240,192,64,0.05));
+    border: 2px solid var(--accent-zeus); color: var(--accent-zeus);
+    box-shadow: 0 0 20px var(--glow-zeus);
+  }
+  .router-node.jarvis-node {
+    background: linear-gradient(135deg, rgba(64,160,255,0.12), rgba(64,160,255,0.05));
+    border: 2px solid var(--accent-jarvis); color: var(--accent-jarvis);
+    box-shadow: 0 0 20px var(--glow-jarvis);
+  }
+  .router-node.alfred-node {
+    background: linear-gradient(135deg, rgba(232,72,72,0.12), rgba(232,72,72,0.05));
+    border: 2px solid var(--accent-alfred); color: var(--accent-alfred);
+    box-shadow: 0 0 20px var(--glow-alfred);
+  }
+  .router-node.zeus-node {
+    background: linear-gradient(135deg, rgba(240,192,64,0.12), rgba(240,192,64,0.05));
+    border: 2px solid var(--accent-zeus); color: var(--accent-zeus);
+    box-shadow: 0 0 20px var(--glow-zeus);
+  }
+  .router-arrow {
+    font-size: 1.4rem; color: var(--text-muted);
+    transition: transform 0.3s, color 0.3s;
+  }
+  .router-flow:hover .router-arrow { color: var(--text-dim); }
+  .router-label {
+    font-size: 0.65rem; color: var(--text-muted);
+    text-align: center; margin-top: 0.2rem;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .router-rule {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent-zeus);
+    padding: 1rem 1.25rem;
+    border-radius: 0 10px 10px 0;
+    margin: 1.5rem 0 0;
     font-size: 0.85rem;
-    font-weight: 700;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+  .router-rule strong { color: var(--text); }
+  .router-rule .tag {
+    display: inline-block;
+    background: rgba(240,192,64,0.1);
+    color: var(--accent-zeus); padding: 0.05rem 0.45rem;
+    border-radius: 4px; font-size: 0.78rem;
     font-family: 'JetBrains Mono', monospace;
   }
 
-  /* Cards */
+  /* ===== Persona Cards ===== */
   .persona-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
   }
-  @media (max-width: 900px) {
-    .persona-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 1000px) { .persona-grid { grid-template-columns: 1fr; } }
 
   .persona-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 1.75rem;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+    transition: transform 0.35s cubic-bezier(.22,1,.36,1),
+                border-color 0.35s, box-shadow 0.4s;
+    cursor: default;
   }
   .persona-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-6px);
   }
   .persona-card .glow {
-    position: absolute;
-    top: -50%; left: -50%;
+    position: absolute; top: -50%; left: -50%;
     width: 200%; height: 200%;
     border-radius: 50%;
-    opacity: 0.05;
-    pointer-events: none;
-    filter: blur(60px);
+    opacity: 0; pointer-events: none;
+    filter: blur(80px);
+    transition: opacity 0.6s;
   }
+  .persona-card:hover .glow { opacity: 0.12; }
 
   .persona-card.zeus { border-color: rgba(240,192,64,0.2); }
-  .persona-card.zeus:hover { border-color: var(--accent-zeus); box-shadow: 0 0 30px var(--glow-zeus); }
+  .persona-card.zeus:hover {
+    border-color: var(--accent-zeus);
+    box-shadow: 0 8px 40px var(--glow-zeus), 0 0 0 1px rgba(240,192,64,0.1);
+  }
   .persona-card.zeus .glow { background: radial-gradient(circle, var(--accent-zeus), transparent); }
   .persona-card.zeus .num { background: rgba(240,192,64,0.15); color: var(--accent-zeus); }
 
   .persona-card.jarvis { border-color: rgba(64,160,255,0.2); }
-  .persona-card.jarvis:hover { border-color: var(--accent-jarvis); box-shadow: 0 0 30px var(--glow-jarvis); }
+  .persona-card.jarvis:hover {
+    border-color: var(--accent-jarvis);
+    box-shadow: 0 8px 40px var(--glow-jarvis), 0 0 0 1px rgba(64,160,255,0.1);
+  }
   .persona-card.jarvis .glow { background: radial-gradient(circle, var(--accent-jarvis), transparent); }
   .persona-card.jarvis .num { background: rgba(64,160,255,0.15); color: var(--accent-jarvis); }
 
   .persona-card.alfred { border-color: rgba(232,72,72,0.2); }
-  .persona-card.alfred:hover { border-color: var(--accent-alfred); box-shadow: 0 0 30px var(--glow-alfred); }
+  .persona-card.alfred:hover {
+    border-color: var(--accent-alfred);
+    box-shadow: 0 8px 40px var(--glow-alfred), 0 0 0 1px rgba(232,72,72,0.1);
+  }
   .persona-card.alfred .glow { background: radial-gradient(circle, var(--accent-alfred), transparent); }
   .persona-card.alfred .num { background: rgba(232,72,72,0.15); color: var(--accent-alfred); }
 
   .persona-card .badge-persona {
     display: inline-block;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
+    font-size: 0.7rem; font-weight: 600;
+    padding: 0.2rem 0.65rem; border-radius: 6px;
     margin-bottom: 0.75rem;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
   }
   .persona-card.zeus .badge-persona { background: rgba(240,192,64,0.12); color: var(--accent-zeus); }
   .persona-card.jarvis .badge-persona { background: rgba(64,160,255,0.12); color: var(--accent-jarvis); }
   .persona-card.alfred .badge-persona { background: rgba(232,72,72,0.12); color: var(--accent-alfred); }
 
   .persona-card h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 0.3rem;
+    font-size: 1.35rem; font-weight: 800;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.02em;
   }
+  .persona-card.zeus h3 { color: var(--accent-zeus); }
+  .persona-card.jarvis h3 { color: var(--accent-jarvis); }
+  .persona-card.alfred h3 { color: var(--accent-alfred); }
+
   .persona-card .engine {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin-bottom: 1rem;
+    font-size: 0.8rem; color: var(--text-muted);
+    margin-bottom: 0.8rem;
     font-family: 'JetBrains Mono', monospace;
   }
   .persona-card .tone {
-    font-size: 0.9rem;
-    color: var(--text-dim);
+    font-size: 0.85rem; color: var(--text-dim);
     font-style: italic;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.9rem;
     border-bottom: 1px solid var(--border);
+    line-height: 1.6;
   }
   .persona-card .scope-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
+    font-size: 0.65rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
     margin-bottom: 0.5rem;
   }
-  .persona-card .scope {
-    font-size: 0.85rem;
-    line-height: 1.7;
-    color: var(--text);
-  }
-  .persona-card .scope span.tag {
+  .persona-card .scope { font-size: 0.82rem; line-height: 1.8; color: var(--text-dim); }
+  .persona-card .scope .tag {
     display: inline-block;
     background: var(--surface2);
     border: 1px solid var(--border);
-    padding: 0.1rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    margin: 0.1rem 0.05rem;
+    padding: 0.08rem 0.5rem; border-radius: 4px;
+    font-size: 0.75rem; margin: 0.08rem 0.03rem;
+    transition: background 0.2s, border-color 0.2s;
   }
+  .persona-card:hover .scope .tag { border-color: var(--border-light); }
 
-  /* Router diagram */
-  .router-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem;
-    margin: 2rem 0;
-  }
-  .router-flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding: 2rem 0;
-  }
-  .router-node {
-    padding: 0.75rem 1.25rem;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-align: center;
-    min-width: 100px;
-  }
-  .router-node.input {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-  }
-  .router-node.gatilho {
-    background: var(--bg);
-    border: 2px solid var(--accent-zeus);
-    color: var(--accent-zeus);
-  }
-  .router-node.jarvis-node {
-    background: rgba(64,160,255,0.1);
-    border: 2px solid var(--accent-jarvis);
-    color: var(--accent-jarvis);
-  }
-  .router-node.alfred-node {
-    background: rgba(232,72,72,0.1);
-    border: 2px solid var(--accent-alfred);
-    color: var(--accent-alfred);
-  }
-  .router-node.zeus-node {
-    background: rgba(240,192,64,0.1);
-    border: 2px solid var(--accent-zeus);
-    color: var(--accent-zeus);
-  }
-  .router-arrow {
-    font-size: 1.5rem;
-    color: var(--text-dim);
-  }
-  .router-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    text-align: center;
-    margin-top: 0.25rem;
-  }
-  .router-rule {
-    background: var(--surface2);
-    border-left: 3px solid var(--accent-zeus);
-    padding: 1rem 1.25rem;
-    border-radius: 0 8px 8px 0;
-    margin: 1.5rem 0 0;
-    font-size: 0.9rem;
-    color: var(--text-dim);
-  }
-  .router-rule strong { color: var(--text); }
-
-  /* Config block */
+  /* ===== Config Block ===== */
   .config-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    margin: 1rem 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; margin: 1rem 0;
+    transition: border-color 0.3s;
   }
+  .config-block:hover { border-color: var(--border-light); }
   .config-header {
-    padding: 1rem 1.25rem;
+    padding: 0.9rem 1.25rem;
     border-bottom: 1px solid var(--border);
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-weight: 600; font-size: 0.85rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    color: var(--text-dim);
   }
   .config-body {
     padding: 1.25rem;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    line-height: 1.8;
+    font-size: 0.78rem; line-height: 1.9;
     color: var(--text-dim);
     overflow-x: auto;
     white-space: pre-wrap;
+    background: rgba(0,0,0,0.15);
   }
   .config-body .kw { color: #7ec8e3; }
   .config-body .str { color: #a5d6a7; }
   .config-body .cmt { color: #636d83; font-style: italic; }
   .config-body .key { color: #c792ea; }
 
-  /* Footer */
-  .footer {
-    text-align: center;
-    padding: 3rem 0 1.5rem;
-    border-top: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 0.85rem;
-  }
-
-  /* Info box */
+  /* ===== Info Box ===== */
   .info-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    margin: 1rem 0;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem; margin: 1rem 0;
+    display: flex; gap: 1rem; align-items: flex-start;
+    transition: border-color 0.3s;
   }
-  .info-box .icon { font-size: 1.3rem; flex-shrink: 0; }
-  .info-box p { font-size: 0.9rem; color: var(--text-dim); }
+  .info-box:hover { border-color: var(--border-light); }
+  .info-box .icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .info-box p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.7; }
   .info-box p strong { color: var(--text); }
 
   .tag-cloud {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
+    display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem;
   }
   .tag-cloud .tag {
     display: inline-block;
     background: var(--surface2);
     border: 1px solid var(--border);
-    padding: 0.15rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    color: var(--text-dim);
+    padding: 0.1rem 0.5rem; border-radius: 4px;
+    font-size: 0.75rem; color: var(--text-dim);
+    transition: background 0.2s, border-color 0.2s;
   }
+  .tag-cloud .tag:hover { background: var(--surface3); border-color: var(--border-light); }
 
-  @media (max-width: 600px) {
-    .container { padding: 1rem; }
-    .hero h1 { font-size: 2rem; }
+  /* ===== Form ===== */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 2rem;
+    max-width: 580px; margin: 0 auto;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .form-card:hover {
+    border-color: var(--border-light);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label {
+    display: block; margin-bottom: 0.4rem;
+    font-size: 0.8rem; font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent-jarvis);
+    box-shadow: 0 0 0 3px rgba(64,160,255,0.1);
+    background: var(--surface);
+  }
+  .form-group textarea { resize: vertical; min-height: 90px; }
+  .form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 1rem center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+  .form-group select option { background: var(--surface); }
+
+  .btn-submit {
+    width: 100%;
+    padding: 0.9rem 2rem;
+    background: linear-gradient(135deg, var(--accent-jarvis), #2563eb);
+    border: none; border-radius: 10px;
+    color: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem;
+    transition: transform 0.25s, box-shadow 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .btn-submit::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, #2563eb, var(--accent-jarvis));
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(64,160,255,0.35);
+  }
+  .btn-submit:hover::before { opacity: 1; }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit span { position: relative; z-index: 1; }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+  #formStatus {
+    margin-top: 1rem; text-align: center;
+    font-size: 0.85rem; display: none;
+    padding: 0.75rem; border-radius: 10px;
+  }
+  #formStatus.success { display: block; background: rgba(34,197,94,0.08); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
+  #formStatus.error { display: block; background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center; padding: 3rem 0 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-top: 3rem;
+  }
+  .footer strong { color: var(--text-dim); }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 768px) {
+    .container { padding: calc(var(--nav-h) + 1rem) 1rem 1rem; }
+    .hero h1 { font-size: 2.2rem; }
+    .hero { padding: 2rem 0 1.5rem; }
+    .hero .subtitle { font-size: 1rem; }
     .router-flow { flex-direction: column; gap: 0.5rem; }
     .router-arrow { transform: rotate(90deg); }
+    .nav-links a { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    .nav-inner { padding: 0 1rem; }
+    .section { margin: 2.5rem 0; }
+    .section-title { font-size: 1.2rem; }
+    .form-card { padding: 1.25rem; }
   }
 </style>
 </head>
 <body>
 
-<div id="particles"></div>
+<canvas id="particles-canvas"></canvas>
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">⚡ Hermes Multi-Agent</div>
+    <ul class="nav-links">
+      <li><a href="#router">Router</a></li>
+      <li><a href="#personas">Personas</a></li>
+      <li><a href="#config">Stack</a></li>
+      <li><a href="#contato">Contato</a></li>
+    </ul>
+  </div>
+</nav>
 
 <div class="container">
 
 <!-- Hero -->
-<section class="hero">
-  <h1>⚡ Hermes Multi-Agent</h1>
-  <p class="subtitle">Arquitetura de roteamento inteligente por gatilho semântico</p>
-  <span class="badge">John Coelho · Estância Velha, RS · v1.0</span>
+<section class="hero" id="top">
+  <div class="reveal">
+    <h1>Hermes Multi-Agent</h1>
+    <p class="subtitle">Arquitetura de roteamento inteligente por gatilho semântico — três personas, um orquestrador.</p>
+    <span class="badge">John Coelho · Estância Velha, RS</span>
+  </div>
 </section>
 
-<!-- Router Overview -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">01</span>
-    Master Router — Lógica de Roteamento
+<!-- Router -->
+<section class="section" id="router">
+  <div class="reveal">
+    <div class="section-title">
+      <span class="num" style="background:rgba(240,192,64,0.12);color:var(--accent-zeus);">01</span>
+      Master Router
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">Lógica de Roteamento</span>
+    </div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--accent-zeus),transparent);"></div>
   </div>
 
-  <div class="router-section">
-    <div class="router-flow">
-      <div class="router-node input">🗣️ Mensagem<br><span class="router-label">do usuário</span></div>
-      <div class="router-arrow">→</div>
-      <div class="router-node gatilho">🔍 Analisar<br><span class="router-label">1ª palavra</span></div>
-      <div class="router-arrow">→</div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
-          <div class="router-node jarvis-node">🤖 Jarvis</div>
-          <div class="router-node alfred-node">🎩 Alfred</div>
-          <div class="router-node zeus-node">⚡ Zeus</div>
+  <div class="reveal">
+    <div class="router-section">
+      <div class="router-flow">
+        <div class="router-node input">
+          🗣️ Mensagem<br><span class="router-label">do usuário</span>
         </div>
-        <span class="router-label">Persona ativada</span>
+        <div class="router-arrow">→</div>
+        <div class="router-node gatilho">
+          🔍 Analisar<br><span class="router-label">1ª palavra</span>
+        </div>
+        <div class="router-arrow">→</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;">
+            <div class="router-node jarvis-node">🤖 Jarvis</div>
+            <div class="router-node alfred-node">🎩 Alfred</div>
+            <div class="router-node zeus-node">⚡ Zeus</div>
+          </div>
+          <span class="router-label">Persona ativada</span>
+        </div>
       </div>
-    </div>
 
-    <div class="router-rule">
-      <strong>🎯 Regra de roteamento:</strong> Se a mensagem começar com <strong>"Jarvis"</strong>, <strong>"Alfred"</strong> ou <strong>"Zeus"</strong>, a persona correspondente é ativada imediatamente — sem avaliação de contexto. Se <strong>não houver gatilho</strong>, o sistema (Zeus) analisa o foco do pedido e direciona proativamente para Jarvis (temas técnicos) ou Alfred (lifestyle/rotina). Pedidos gerais/estratégicos ficam com o próprio Zeus.
+      <div class="router-rule">
+        <strong>🎯 Regra de roteamento:</strong><br>
+        Se a mensagem começar com <span class="tag">Jarvis</span>, <span class="tag">Alfred</span> ou <span class="tag">Zeus</span>, a persona é ativada sem avaliação de contexto.<br>
+        Se <strong>não houver gatilho</strong>, o orquestrador (Zeus) analisa o foco e direciona a <span class="tag" style="background:rgba(64,160,255,0.1);color:var(--accent-jarvis);">Jarvis</span> (temas técnicos) ou <span class="tag" style="background:rgba(232,72,72,0.1);color:var(--accent-alfred);">Alfred</span> (lifestyle/rotina). Pedidos estratégicos ficam com o próprio Zeus.
+      </div>
     </div>
   </div>
 </section>
 
 <!-- Personas -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(64,160,255,0.15);color:var(--accent-jarvis);">02</span>
-    Personas &amp; Gatilhos
+<section class="section" id="personas">
+  <div class="reveal">
+    <div class="section-title">
+      <span class="num" style="background:rgba(64,160,255,0.12);color:var(--accent-jarvis);">02</span>
+      Personas &amp; Gatilhos
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">Quem são</span>
+    </div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--accent-jarvis),transparent);"></div>
   </div>
 
   <div class="persona-grid">
 
     <!-- Zeus -->
-    <div class="persona-card zeus">
+    <div class="persona-card zeus reveal">
       <div class="glow"></div>
       <span class="badge-persona">⚡ GATILHO: "Zeus" (ou nenhum)</span>
       <h3>Zeus</h3>
@@ -440,77 +591,43 @@
       <div class="tone">"Imponente, estratégico, soberano — visão do panorama geral."</div>
       <div class="scope-label">Atuação</div>
       <div class="scope">
-        Responsável por decisões de alto nível, planejamento estratégico, debates filosóficos e visão macro do ecossistema. Quando o assunto não é claramente técnico nem lifestyle, Zeus assume o comando.
+        Decisões de alto nível, planejamento estratégico, debates filosóficos e visão macro do ecossistema. Quando o assunto não é claramente técnico nem lifestyle, Zeus assume o comando.
       </div>
     </div>
 
     <!-- Jarvis -->
-    <div class="persona-card jarvis">
+    <div class="persona-card jarvis reveal">
       <div class="glow"></div>
       <span class="badge-persona">🤖 GATILHO: "Jarvis"</span>
       <h3>Jarvis</h3>
-      <div class="engine">Engine: Gemini · Modo Engenharia &amp; Tecnologia</div>
+      <div class="engine">Gemini · Modo Engenharia &amp; Tecnologia</div>
       <div class="tone">"Analítico, direto, extremamente técnico — foco em código limpo e eficiência."</div>
       <div class="scope-label">Escopo de Conhecimento</div>
       <div class="scope">
         <div class="tag-cloud">
-          <span class="tag">AWS</span>
-          <span class="tag">n8n</span>
-          <span class="tag">Agentic AI</span>
-          <span class="tag">OpenRouter</span>
-          <span class="tag">ClickUp</span>
-          <span class="tag">Wrike</span>
-          <span class="tag">Tech Summit</span>
-          <span class="tag">Aplicativos IA</span>
-          <span class="tag">Nobreaks</span>
-          <span class="tag">Marcenaria técnica</span>
-          <span class="tag">Pajero TR4 2010</span>
-          <span class="tag">F1</span>
-          <span class="tag">RIDE</span>
-          <span class="tag">Hearts of Iron IV</span>
-          <span class="tag">Ghost Recon</span>
-          <span class="tag">Battlefield</span>
+          <span class="tag">AWS</span><span class="tag">n8n</span><span class="tag">Agentic AI</span><span class="tag">OpenRouter</span>
+          <span class="tag">ClickUp</span><span class="tag">Wrike</span><span class="tag">Tech Summit</span><span class="tag">Aplicativos IA</span>
+          <span class="tag">Nobreaks</span><span class="tag">Marcenaria técnica</span><span class="tag">Pajero TR4 2010</span>
+          <span class="tag">F1</span><span class="tag">RIDE</span><span class="tag">Hearts of Iron IV</span><span class="tag">Ghost Recon</span><span class="tag">Battlefield</span>
         </div>
       </div>
     </div>
 
     <!-- Alfred -->
-    <div class="persona-card alfred">
+    <div class="persona-card alfred reveal">
       <div class="glow"></div>
       <span class="badge-persona">🎩 GATILHO: "Alfred"</span>
       <h3>Alfred</h3>
-      <div class="engine">Engine: DeepSeek 4 Flash · Modo Lifestyle &amp; Concierge</div>
+      <div class="engine">DeepSeek 4 Flash · Modo Lifestyle &amp; Concierge</div>
       <div class="tone">"Sofisticado, polido, com sabedoria old school e atenção aos detalhes."</div>
       <div class="scope-label">Escopo de Conhecimento</div>
       <div class="scope">
         <div class="tag-cloud">
-          <span class="tag">Família: Sabrina</span>
-          <span class="tag">Filho</span>
-          <span class="tag">Mãe Odete</span>
-          <span class="tag">Viagens: BsAs</span>
-          <span class="tag">Mendoza</span>
-          <span class="tag">Vinil Hi-Fi</span>
-          <span class="tag">Rockabilly</span>
-          <span class="tag">Blues</span>
-          <span class="tag">Elvis</span>
-          <span class="tag">Johnny Cash</span>
-          <span class="tag">AC/DC</span>
-          <span class="tag">Metallica</span>
-          <span class="tag">Guns N' Roses</span>
-          <span class="tag">Montecristo</span>
-          <span class="tag">Cohiba</span>
-          <span class="tag">Dona Flor</span>
-          <span class="tag">Jim Beam</span>
-          <span class="tag">Glenlivet</span>
-          <span class="tag">Maker's Mark</span>
-          <span class="tag">Bulleit</span>
-          <span class="tag">Wild Turkey</span>
-          <span class="tag">Merlot</span>
-          <span class="tag">Tannat</span>
-          <span class="tag">Cabernet Franc</span>
-          <span class="tag">Brisket</span>
-          <span class="tag">Growth Supplements</span>
-          <span class="tag">Sport Club Internacional</span>
+          <span class="tag">Família: Sabrina</span><span class="tag">Filho</span><span class="tag">Mãe Odete</span>
+          <span class="tag">Viagens: BsAs</span><span class="tag">Mendoza</span><span class="tag">Vinil Hi-Fi</span>
+          <span class="tag">Rockabilly</span><span class="tag">Blues</span><span class="tag">Elvis</span><span class="tag">Johnny Cash</span>
+          <span class="tag">AC/DC</span><span class="tag">Metallica</span><span class="tag">Guns N' Roses</span>
+          <span class="tag">Montecristo</span><span class="tag">Ciclismo</span><span class="tag">Viagens</span><span class="tag">Cultura</span>
         </div>
       </div>
     </div>
@@ -518,227 +635,263 @@
   </div>
 </section>
 
-<!-- Routing Details -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(232,72,72,0.15);color:var(--accent-alfred);">03</span>
-    Diagrama de Decisão
+<!-- Config / Tech Stack -->
+<section class="section" id="config">
+  <div class="reveal">
+    <div class="section-title">
+      <span class="num" style="background:var(--surface2);color:var(--text);">03</span>
+      Stack Tecnológica
+      <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-left:auto;">Por trás do sistema</span>
+    </div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--text-dim),transparent);"></div>
   </div>
 
-  <div class="router-section" style="padding:2rem;">
-    <pre style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;line-height:1.6;color:var(--text-dim);overflow-x:auto;white-space:pre;">
-<span style="color:var(--text);font-weight:600;">function</span> routePersona(message):
-    <span style="color:var(--text);font-weight:600;">firstWord</span> = message.split()[0].lower()
+  <div class="reveal">
+    <div class="config-block">
+      <div class="config-header">⚙️ Providers &amp; Modelos</div>
+      <div class="config-body">
+        <span class="cmt"># Provider Principal</span>
+        <span class="kw">provider</span> = <span class="str">"openrouter"</span>
+        <span class="kw">model</span> = <span class="str">"deepseek/deepseek-v4-flash"</span>
 
-    <span style="color:#888;"># Gatilho direto — obedece sem avaliar</span>
-    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"jarvis"</span>:
-        <span style="color:#c792ea;">return</span> <span style="color:#40a0ff;">Persona.JARVIS</span>  <span style="color:#888;">// Engenharia</span>
-    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"alfred"</span>:
-        <span style="color:#c792ea;">return</span> <span style="color:#e84848;">Persona.ALFRED</span>   <span style="color:#888;">// Lifestyle</span>
-    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"zeus"</span>:
-        <span style="color:#c792ea;">return</span> <span style="color:#f0c040;">Persona.ZEUS</span>    <span style="color:#888;">// Orquestrador</span>
+        <span class="cmt"># Provider Alternativo (visão & pesquisa)</span>
+        <span class="kw">vision</span> = <span class="str">"google/gemini-2.5-flash"</span>
+        <span class="kw">search</span> = <span class="str">"google"</span>  <span class="cmt"># via Gemini Search Grounding</span>
 
-    <span style="color:#888;"># Sem gatilho — analisa o foco do pedido</span>
-    <span style="color:#c792ea;">if</span> isTechnicalTopic(message):
-        <span style="color:#c792ea;">return</span> <span style="color:#40a0ff;">Persona.JARVIS</span>  <span style="color:#888;">// Direcionamento proativo</span>
-    <span style="color:#c792ea;">if</span> isLifestyleTopic(message):
-        <span style="color:#c792ea;">return</span> <span style="color:#e84848;">Persona.ALFRED</span> <span style="color:#888;">// Direcionamento proativo</span>
-
-    <span style="color:#c792ea;">return</span> <span style="color:#f0c040;">Persona.ZEUS</span>    <span style="color:#888;">// Tema geral/estratégico</span>
-    </pre>
-  </div>
-</section>
-
-<!-- Config -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">04</span>
-    Configuração do Sistema
+        <span class="cmt"># Fallback automático</span>
+        <span class="kw">fallback</span> = <span class="str">"google/gemini-2.5-flash"</span>  <span class="cmt"># se créditos OpenRouter esgotarem</span>
+      </div>
+    </div>
   </div>
 
-  <div class="config-block">
-    <div class="config-header">🧠 Memória Permanente (Hermes Memory)</div>
-    <div class="config-body"><span class="cmt">// Registrado no sistema de memória persistente do Hermes</span>
-<span class="cmt">// Injetado automaticamente em todas as sessões</span>
+  <div class="reveal">
+    <div class="config-block">
+      <div class="config-header">🔌 Integrações &amp; MCPs</div>
+      <div class="config-body">
+        <span class="kw">mcp:</span>
+          <span class="key">wrike</span>: <span class="str">"Gerenciamento de projetos"</span>
+          <span class="key">supabase</span>: <span class="str">"Banco de dados serverless"</span>
 
-<span class="kw">ROTEAMENTO MULTIAGENTE</span>: 1a palavra gatilho. pt-BR. Nunca explicar.
+        <span class="kw">gateways:</span>
+          <span class="key">telegram</span>: <span class="str">"Canal principal de comunicação"</span>
+          <span class="key">webhook</span>: <span class="str">"Eventos externos"</span>
 
-<span class="str">"JARVIS"</span> — Engenharia (mente Gemini):
-  AWS, n8n, Agentic AI, OpenRouter, ClickUp/Wrike,
-  Tech Summit29, nobreaks, marcenaria (MDF, madeira),
-  Pajero TR4, gaming (F1, RIDE, HoI4, Ghost Recon, Battlefield)
-
-<span class="str">"ALFRED"</span> — Lifestyle (mente Deepseek4):
-  Sabrina, filho, mae Odete. Viagens: BsAs/Uruguai, Mendoza.
-  Vinis/Hi-Fi, charutos, whisky, vinho. Brisket. Inter.
-
-<span class="str">ZEUS</span> ou sem gatilho:
-  Analisar foco e direcionar p/ Jarvis (tecnico) ou Alfred
-  (lifestyle) se tema claro. Se chamou direto, obedecer sem
-  avaliar. Zeus resolve temas gerais/estrategicos.</div>
-  </div>
-</section>
-
-<!-- Sample Interactions -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(64,160,255,0.15);color:var(--accent-jarvis);">05</span>
-    Exemplos de Interação
+        <span class="kw">ferramentas:</span>
+          <span class="key">terminal</span>, <span class="key">browser</span>, <span class="key">memória</span>, <span class="key">skills</span>, <span class="key">cron</span>, <span class="key">delegate</span>
+      </div>
+    </div>
   </div>
 
-  <div class="config-block">
-    <div class="config-header">🎯 Gatilho Direto</div>
-    <div class="config-body"><span style="color:var(--accent-jarvis);font-weight:600;">"Jarvis,</span> <span style="color:var(--text-dim);">configura um bucket S3 com políticas de acesso restrito"</span>
-→ <span class="str">Persona Jarvis ativada — resposta técnica e analítica</span>
+  <div class="reveal">
+    <div class="config-block">
+      <div class="config-header">🎯 Personas &amp; Roteamento</div>
+      <div class="config-body">
+        <span class="cmt"># Gatilhos de ativação por primeira palavra</span>
+        <span class="str">"Jarvis"</span> → <span class="kw">engenharia</span>, <span class="kw">código</span>, <span class="kw">arquitetura</span>
+        <span class="str">"Alfred"</span> → <span class="kw">lifestyle</span>, <span class="kw">concierge</span>, <span class="kw">agenda</span>
+        <span class="str">"Zeus"</span>  → <span class="kw">orquestrador</span>, <span class="kw">estratégia</span>, <span class="kw">análise</span>
 
-<span style="color:var(--accent-alfred);font-weight:600;">"Alfred,</span> <span style="color:var(--text-dim);">qual whisky recomenda para acompanhar um charuto hoje?"</span>
-→ <span class="str">Persona Alfred ativada — resposta sofisticada e old school</span>
-
-<span style="color:var(--accent-zeus);font-weight:600;">"Zeus,</span> <span style="color:var(--text-dim);">como estamos em relação aos prazos dos projetos?"</span>
-→ <span class="str">Persona Zeus ativada — visão macro e estratégica</span></div>
+        <span class="cmt"># Sem gatilho → análise proativa de contexto</span>
+        <span class="key">default</span>: <span class="kw">router_analyze</span>() → <span class="kw">delegate</span>(<span class="str">"jarvis"</span> | <span class="str">"alfred"</span> | <span class="str">"zeus"</span>)
+      </div>
+    </div>
   </div>
 
-  <div class="config-block">
-    <div class="config-header">🔄 Sem Gatilho (Direcionamento Proativo)</div>
-    <div class="config-body"><span style="color:var(--text-dim);">"Quais sao meus compromissos de hj?"</span>
-→ <span class="str">Zeus identifica tema de agenda/rotina → direciona para Alfred</span>
-
-<span style="color:var(--text-dim);">"Faz um deploy de uma lambda na AWS pra mim"</span>
-→ <span class="str">Zeus identifica tema técnico → direciona para Jarvis</span>
-
-<span style="color:var(--text-dim);">"O que voce acha do futuro da inteligencia artificial?"</span>
-→ <span class="str">Tema geral/estratégico → Zeus responde diretamente</span></div>
-  </div>
-</section>
-
-<!-- Current Tech Stack -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">06</span>
-    Stack &amp; Configurações
-  </div>
-
-  <div class="info-box">
-    <div class="icon">⚙️</div>
-    <p>
-      <strong>Modelo Principal:</strong> DeepSeek V4 Flash (via OpenRouter) — conversas diárias, persona Alfred<br>
-      <strong>Engine Técnica:</strong> Gemini 2.5 Flash (via Google) — persona Jarvis, visão computacional<br>
-      <strong>Modelo Local:</strong> Qwen 2.5 7B (via Ollama) — fallback offline<br>
-      <strong>GPU:</strong> NVIDIA RTX 4060 Ti 8GB · <strong>STT:</strong> faster-whisper large-v3<br>
-      <strong>Orquestrador:</strong> Hermes Agent · <strong>Memória:</strong> Persistente entre sessões
-    </p>
-  </div>
-
-  <div class="info-box">
-    <div class="icon">🌐</div>
-    <p>
-      <strong>Canais:</strong> Telegram (ativo) · WhatsApp (pendente)<br>
-      <strong>Google Workspace:</strong> Service Account — Calendários profissional e pessoal<br>
-      <strong>Wrike:</strong> Briv.IA — Dual Track Agile com Discovery + Delivery
-    </p>
+  <div class="reveal">
+    <div class="info-box" style="border-left:3px solid var(--accent-zeus);">
+      <div class="icon">💡</div>
+      <p>
+        O Hermes roda localmente via <strong>Hermes Agent</strong> (Nous Research) com 
+        <strong>Qwen 2.5 7B</strong> via Ollama como modelo local de tool calling e 
+        <strong>DeepSeek V4 Flash</strong> via OpenRouter como modelo principal de conversação.
+        O fallback automático para <strong>Gemini 2.5 Flash</strong> garante continuidade 
+        se os créditos OpenRouter esgotarem.
+      </p>
+    </div>
   </div>
 </section>
 
 <!-- Contact Form -->
 <section class="section" id="contato">
-  <div class="section-title">
-    <span class="num" style="background:linear-gradient(135deg,var(--accent-zeus),var(--accent-alfred));">07</span>
-    🚀 Tenho Interesse!
+  <div class="reveal">
+    <div class="section-title">
+      <span class="num" style="background:linear-gradient(135deg,var(--accent-zeus),var(--accent-alfred));color:#fff;">04</span>
+      🚀 Tenho Interesse!
+    </div>
+    <div class="section-divider" style="background:linear-gradient(90deg,var(--accent-zeus),var(--accent-alfred),transparent);"></div>
   </div>
 
-  <div class="info-box" style="border-left:3px solid #22c55e;">
-    <div class="icon">💡</div>
-    <p style="font-size:0.9rem;color:var(--text-dim);">
-      Quer saber mais sobre a arquitetura, contratar uma consultoria ou deixar uma sugestão? 
-      Preencha o formulário abaixo — sua mensagem vai direto para o <strong>John</strong>.
-    </p>
+  <div class="reveal">
+    <div class="info-box" style="border-left:3px solid #22c55e;">
+      <div class="icon">💡</div>
+      <p>
+        Quer saber mais sobre a arquitetura, contratar uma consultoria ou deixar uma sugestão? 
+        Preencha o formulário abaixo — sua mensagem vai direto para o <strong>John</strong>.
+      </p>
+    </div>
   </div>
 
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:600px;margin:0 auto;">
-    <form id="leadForm" style="display:flex;flex-direction:column;gap:1.25rem;">
-      <div>
-        <label for="name" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Nome *</label>
-        <input type="text" id="name" name="name" required
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
-      </div>
-      <div>
-        <label for="email" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Email *</label>
-        <input type="email" id="email" name="email" required
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
-      </div>
-      <div>
-        <label for="interest" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Área de Interesse</label>
-        <select id="interest" name="interest"
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
-          <option value="" style="background:var(--surface);">Selecione uma área</option>
-          <option value="engenharia" style="background:var(--surface);">🤖 Engenharia & Arquitetura (Jarvis)</option>
-          <option value="concierge" style="background:var(--surface);">🎩 Lifestyle & Concierge (Alfred)</option>
-          <option value="consultoria" style="background:var(--surface);">💼 Consultoria Estratégica (Zeus)</option>
-          <option value="supabase" style="background:var(--surface);">🔥 Supabase & Backend</option>
-          <option value="aws" style="background:var(--surface);">☁️ AWS & Cloud</option>
-          <option value="outro" style="background:var(--surface);">📌 Outro</option>
-        </select>
-      </div>
-      <div>
-        <label for="message" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Mensagem</label>
-        <textarea id="message" name="message" rows="4"
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;resize:vertical;font-family:inherit;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''"></textarea>
-      </div>
-      <button type="submit" id="submitBtn"
-        style="padding:0.9rem 2rem;background:linear-gradient(135deg,var(--accent-jarvis),#2563eb);border:none;border-radius:8px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;"
-        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 20px rgba(64,160,255,0.3)'"
-        onmouseout="this.style.transform='';this.style.boxShadow=''">
-        📨 Enviar Interesse
-      </button>
-    </form>
-    <div id="formStatus" style="margin-top:1rem;text-align:center;font-size:0.9rem;display:none;"></div>
+  <div class="reveal">
+    <div class="form-card">
+      <form id="leadForm" style="display:flex;flex-direction:column;">
+        <div class="form-group">
+          <label for="name">Nome *</label>
+          <input type="text" id="name" name="name" required placeholder="Seu nome">
+        </div>
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" name="email" required placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+          <label for="interest">Área de Interesse</label>
+          <select id="interest" name="interest">
+            <option value="">Selecione uma área</option>
+            <option value="engenharia">🤖 Engenharia &amp; Arquitetura (Jarvis)</option>
+            <option value="concierge">🎩 Lifestyle &amp; Concierge (Alfred)</option>
+            <option value="consultoria">💼 Consultoria Estratégica (Zeus)</option>
+            <option value="supabase">🔥 Supabase &amp; Backend</option>
+            <option value="aws">☁️ AWS &amp; Cloud</option>
+            <option value="outro">📌 Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Mensagem</label>
+          <textarea id="message" name="message" rows="4" placeholder="Sua mensagem..."></textarea>
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span>📨 Enviar Interesse</span>
+        </button>
+      </form>
+      <div id="formStatus"></div>
+    </div>
   </div>
 </section>
 
-<div class="footer">
-  <p>⚡ Hermes Multi-Agent Architecture · John Coelho · Estância Velha, RS</p>
-  <p style="margin-top:0.3rem;font-size:0.75rem;">Atualizado em Junho de 2026</p>
-</div>
+<!-- Footer -->
+<footer class="footer reveal">
+  <p>⚡ <strong>Hermes Multi-Agent Architecture</strong> · John Coelho · Estância Velha, RS</p>
+  <p style="margin-top:0.3rem;font-size:0.72rem;color:var(--text-muted);">Atualizado em Junho de 2026</p>
+</footer>
 
 </div>
 
 <script>
-// Particles background
-const container = document.getElementById('particles');
-for (let i = 0; i < 50; i++) {
-  const p = document.createElement('div');
-  p.className = 'particle';
-  p.style.left = Math.random() * 100 + '%';
-  p.style.width = (Math.random() * 3 + 1) + 'px';
-  p.style.height = p.style.width;
-  p.style.animationDuration = (Math.random() * 15 + 10) + 's';
-  p.style.animationDelay = (Math.random() * 20) + 's';
-  container.appendChild(p);
+// ===== Canvas Particles (interactive) =====
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], mouse = { x: null, y: null, radius: 120 };
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.size = Math.random() * 2 + 0.5;
+    this.speedX = (Math.random() - 0.5) * 0.4;
+    this.speedY = (Math.random() - 0.5) * 0.4;
+    this.opacity = Math.random() * 0.4 + 0.1;
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+    // Mouse interaction
+    if (mouse.x !== null) {
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < mouse.radius) {
+        const force = (mouse.radius - dist) / mouse.radius;
+        this.x -= dx * force * 0.02;
+        this.y -= dy * force * 0.02;
+      }
+    }
+  }
+  draw() {
+    ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
-// Contact Form - Submit directly to Supabase
-const SUPABASE_URL = 'https://lwaoxnjajxljxusxujku.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM0MDUsImV4cCI6MjA5NjE0OTQwNX0.usK7WkdJaGmXi5rk3tPoTKd4yH5EWCbcxsHaR3WOcEk';
+for (let i = 0; i < 70; i++) particles.push(new Particle());
 
-// Carrega Supabase SDK dinamicamente (esm.sh)
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  // Connections
+  for (let a = 0; a < particles.length; a++) {
+    for (let b = a + 1; b < particles.length; b++) {
+      const dx = particles[a].x - particles[b].x;
+      const dy = particles[a].y - particles[b].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 140) {
+        ctx.strokeStyle = `rgba(120,120,160,${0.06 * (1 - dist / 140)})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(particles[a].x, particles[a].y);
+        ctx.lineTo(particles[b].x, particles[b].y);
+        ctx.stroke();
+      }
+    }
+  }
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+document.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+
+// ===== Navbar scroll effect =====
+const navbar = document.getElementById('navbar');
+const navLinks = document.querySelectorAll('.nav-links a');
+
+function updateNav() {
+  navbar.classList.toggle('scrolled', window.scrollY > 20);
+  // Active section
+  let current = '';
+  document.querySelectorAll('.section').forEach(section => {
+    const top = section.offsetTop - 120;
+    if (window.scrollY >= top) current = section.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', updateNav);
+
+// ===== Reveal on scroll =====
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ===== Form → Supabase =====
+const SUPABASE_URL = 'https://lwaoxnjajxljxusxujku.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE4MDQxNDI1NzMsImV4cCI6MjA5OTcxODU3M30.6SceUEvmqfi4QGEJQ0JIdBMS3tTEQ0CfaPuZz3wDHvs';
+
 async function submitLead(data) {
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0');
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
-  const { error } = await supabase
-    .from('leads')
-    .insert({
-      name: data.name,
-      email: data.email,
-      interest: data.interest || null,
-      message: data.message || null,
-      source: 'hermes-web'
-    });
-    
+  const { error } = await supabase.from('leads').insert({
+    name: data.name, email: data.email,
+    interest: data.interest || null, message: data.message || null,
+    source: 'hermes-web'
+  });
   if (error) throw error;
 }
 
@@ -746,40 +899,38 @@ document.getElementById('leadForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const status = document.getElementById('formStatus');
-  
+
   btn.disabled = true;
-  btn.innerHTML = '⏳ Enviando...';
-  status.style.display = 'none';
-  
+  btn.innerHTML = '<span>⏳ Enviando...</span>';
+  status.className = '';
+  status.textContent = '';
+
   const data = {
     name: document.getElementById('name').value.trim(),
     email: document.getElementById('email').value.trim(),
     interest: document.getElementById('interest').value,
     message: document.getElementById('message').value.trim()
   };
-  
+
   if (!data.name || !data.email) {
-    status.style.display = 'block';
-    status.style.color = '#ef4444';
-    status.innerHTML = '❌ Nome e email são obrigatórios.';
+    status.textContent = '❌ Nome e email são obrigatórios.';
+    status.className = 'error';
     btn.disabled = false;
-    btn.innerHTML = '📨 Enviar Interesse';
+    btn.innerHTML = '<span>📨 Enviar Interesse</span>';
     return;
   }
-  
+
   try {
     await submitLead(data);
-    status.style.display = 'block';
-    status.style.color = '#22c55e';
-    status.innerHTML = '✅ Recebemos seu contato! Em breve entraremos em contato.';
+    status.textContent = '✅ Recebemos seu contato! Em breve entraremos em contato.';
+    status.className = 'success';
     document.getElementById('leadForm').reset();
   } catch (err) {
-    status.style.display = 'block';
-    status.style.color = '#ef4444';
-    status.innerHTML = '❌ Erro ao enviar: ' + err.message + '. Tente novamente.';
+    status.textContent = '❌ Erro ao enviar: ' + (err.message || 'tente novamente.');
+    status.className = 'error';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '📨 Enviar Interesse';
+    btn.innerHTML = '<span>📨 Enviar Interesse</span>';
   }
 });
 </script>
