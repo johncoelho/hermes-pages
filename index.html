@@ -3,761 +3,1410 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hermes Multi-Agent Architecture</title>
+<title>Agenda — John Coelho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-  
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
   :root {
     --bg: #0a0a0f;
     --surface: #12121a;
-    --surface2: #1a1a28;
+    --card: #1a1a28;
+    --card-hover: #222236;
     --border: #2a2a3e;
-    --text: #e8e8f0;
-    --text-dim: #8888a0;
-    --accent-zeus: #f0c040;
-    --accent-jarvis: #40a0ff;
-    --accent-alfred: #e84848;
-    --glow-zeus: rgba(240,192,64,0.15);
-    --glow-jarvis: rgba(64,160,255,0.15);
-    --glow-alfred: rgba(232,72,72,0.15);
+    --text: #e8e8ef;
+    --text-dim: #8a8a9e;
+    --accent: #6c5ce7;
+    --accent-glow: rgba(108,92,231,0.15);
+    --green: #00d68f;
+    --yellow: #ffd93d;
+    --orange: #ff6b6b;
+    --purple: #a855f7;
+    --blue: #3b82f6;
+    --today: #6c5ce7;
   }
-
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
   body {
+    background: var(--bg);
+    color: var(--text);
     font-family: 'Inter', -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
+    min-height:100vh;
+    overflow-x:hidden;
   }
-
-  /* Particles background */
-  #particles {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
+  /* Canvas particles background */
+  #particles-canvas {
+    position:fixed; top:0; left:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
   }
-  .particle {
-    position: absolute;
-    width: 3px; height: 3px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 50%;
-    animation: float linear infinite;
+  /* Header */
+  header {
+    position:sticky; top:0; z-index:10;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    padding:16px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:12px;
   }
-  @keyframes float {
-    0% { transform: translateY(100vh) scale(0); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  header h1 {
+    font-size:20px; font-weight:600;
+    background:linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
   }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    position: relative;
-    z-index: 1;
+  header .meta {
+    display:flex; align-items:center; gap:16px;
+    font-size:13px; color:var(--text-dim);
   }
-
-  /* Hero */
-  .hero {
-    text-align: center;
-    padding: 4rem 0 3rem;
-    position: relative;
+  header .meta span { display:flex; align-items:center; gap:6px; }
+  header .badge {
+    background:var(--accent-glow); color:var(--accent);
+    padding:4px 12px; border-radius:999px;
+    font-size:12px; font-weight:500;
+    border:1px solid rgba(108,92,231,0.3);
   }
-  .hero::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 200px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-zeus), transparent);
+  .nav-days {
+    display:flex; gap:6px; overflow-x:auto;
+    padding:12px 24px; position:sticky; top:73px; z-index:9;
+    background:rgba(10,10,15,0.7); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    scrollbar-width:none;
   }
-  .hero h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    background: linear-gradient(135deg, var(--accent-zeus), var(--accent-jarvis), var(--accent-alfred));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .nav-days::-webkit-scrollbar { display:none; }
+  .nav-days a {
+    flex-shrink:0;
+    padding:6px 14px; border-radius:8px;
+    font-size:12px; font-weight:500;
+    color:var(--text-dim); text-decoration:none;
+    border:1px solid var(--border);
+    transition:all .2s;
   }
-  .hero .subtitle {
-    color: var(--text-dim);
-    font-size: 1.1rem;
-    margin-top: 0.75rem;
-    font-weight: 300;
+  .nav-days a:hover, .nav-days a.active {
+    background:var(--accent-glow);
+    border-color:var(--accent);
+    color:var(--accent);
   }
-  .hero .badge {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.35rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.05em;
+  .nav-days a.today {
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
   }
-
-  /* Section */
-  .section {
-    margin: 3rem 0;
+  main {
+    max-width:800px; margin:0 auto;
+    padding:24px; position:relative; z-index:1;
   }
-  .section-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+  .day-section {
+    margin-bottom:32px;
+    opacity:0; transform:translateY(20px);
+    animation:fadeIn .5s ease forwards;
   }
-  .section-title .num {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
+  @keyframes fadeIn { to { opacity:1; transform:translateY(0); } }
+  .day-header {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:12px;
   }
-
-  /* Cards */
-  .persona-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+  .day-header h2 {
+    font-size:16px; font-weight:600;
   }
-  @media (max-width: 900px) {
-    .persona-grid { grid-template-columns: 1fr; }
+  .day-header .date-badge {
+    font-size:11px; font-weight:500;
+    padding:2px 10px; border-radius:999px;
+    background:var(--surface); color:var(--text-dim);
+    border:1px solid var(--border);
   }
-
-  .persona-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.75rem;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  .day-header .day-count {
+    font-size:12px; color:var(--text-dim);
+    margin-left:auto;
   }
-  .persona-card:hover {
-    transform: translateY(-3px);
+  .day-card {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    transition:all .2s;
   }
-  .persona-card .glow {
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    border-radius: 50%;
-    opacity: 0.05;
-    pointer-events: none;
-    filter: blur(60px);
+  .day-card:hover { border-color:rgba(108,92,231,0.3); }
+  .event-row {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 16px;
+    border-bottom:1px solid rgba(42,42,62,0.5);
+    transition:background .15s;
+    cursor:default;
   }
-
-  .persona-card.zeus { border-color: rgba(240,192,64,0.2); }
-  .persona-card.zeus:hover { border-color: var(--accent-zeus); box-shadow: 0 0 30px var(--glow-zeus); }
-  .persona-card.zeus .glow { background: radial-gradient(circle, var(--accent-zeus), transparent); }
-  .persona-card.zeus .num { background: rgba(240,192,64,0.15); color: var(--accent-zeus); }
-
-  .persona-card.jarvis { border-color: rgba(64,160,255,0.2); }
-  .persona-card.jarvis:hover { border-color: var(--accent-jarvis); box-shadow: 0 0 30px var(--glow-jarvis); }
-  .persona-card.jarvis .glow { background: radial-gradient(circle, var(--accent-jarvis), transparent); }
-  .persona-card.jarvis .num { background: rgba(64,160,255,0.15); color: var(--accent-jarvis); }
-
-  .persona-card.alfred { border-color: rgba(232,72,72,0.2); }
-  .persona-card.alfred:hover { border-color: var(--accent-alfred); box-shadow: 0 0 30px var(--glow-alfred); }
-  .persona-card.alfred .glow { background: radial-gradient(circle, var(--accent-alfred), transparent); }
-  .persona-card.alfred .num { background: rgba(232,72,72,0.15); color: var(--accent-alfred); }
-
-  .persona-card .badge-persona {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.05em;
+  .event-row:last-child { border-bottom:none; }
+  .event-row:hover { background:rgba(108,92,231,0.05); }
+  .event-time {
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px; font-weight:500;
+    min-width:85px; color:var(--accent);
+    flex-shrink:0;
   }
-  .persona-card.zeus .badge-persona { background: rgba(240,192,64,0.12); color: var(--accent-zeus); }
-  .persona-card.jarvis .badge-persona { background: rgba(64,160,255,0.12); color: var(--accent-jarvis); }
-  .persona-card.alfred .badge-persona { background: rgba(232,72,72,0.12); color: var(--accent-alfred); }
-
-  .persona-card h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 0.3rem;
+  .event-time.allday {
+    color:var(--green);
+    font-size:11px;
   }
-  .persona-card .engine {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin-bottom: 1rem;
-    font-family: 'JetBrains Mono', monospace;
+  .event-dot {
+    width:6px; height:6px; border-radius:50%;
+    flex-shrink:0;
+    background:var(--accent);
   }
-  .persona-card .tone {
-    font-size: 0.9rem;
-    color: var(--text-dim);
-    font-style: italic;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+  .event-dot.allday { background:var(--green); }
+  .event-title {
+    font-size:14px; font-weight:400;
+    flex:1;
   }
-  .persona-card .scope-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    margin-bottom: 0.5rem;
+  .event-title strong { font-weight:600; }
+  .today-marker {
+    border-left:3px solid var(--today);
   }
-  .persona-card .scope {
-    font-size: 0.85rem;
-    line-height: 1.7;
-    color: var(--text);
+  .today-marker .event-time { color:var(--today); }
+  .empty-state {
+    text-align:center; padding:60px 24px;
+    color:var(--text-dim);
   }
-  .persona-card .scope span.tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 0.1rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    margin: 0.1rem 0.05rem;
+  .empty-state svg { width:64px; height:64px; margin-bottom:16px; opacity:.4; }
+  .empty-state p { font-size:15px; }
+  footer {
+    text-align:center; padding:32px 24px;
+    font-size:12px; color:var(--text-dim);
+    border-top:1px solid var(--border);
+    position:relative; z-index:1;
   }
-
-  /* Router diagram */
-  .router-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem;
-    margin: 2rem 0;
-  }
-  .router-flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding: 2rem 0;
-  }
-  .router-node {
-    padding: 0.75rem 1.25rem;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-align: center;
-    min-width: 100px;
-  }
-  .router-node.input {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-  }
-  .router-node.gatilho {
-    background: var(--bg);
-    border: 2px solid var(--accent-zeus);
-    color: var(--accent-zeus);
-  }
-  .router-node.jarvis-node {
-    background: rgba(64,160,255,0.1);
-    border: 2px solid var(--accent-jarvis);
-    color: var(--accent-jarvis);
-  }
-  .router-node.alfred-node {
-    background: rgba(232,72,72,0.1);
-    border: 2px solid var(--accent-alfred);
-    color: var(--accent-alfred);
-  }
-  .router-node.zeus-node {
-    background: rgba(240,192,64,0.1);
-    border: 2px solid var(--accent-zeus);
-    color: var(--accent-zeus);
-  }
-  .router-arrow {
-    font-size: 1.5rem;
-    color: var(--text-dim);
-  }
-  .router-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    text-align: center;
-    margin-top: 0.25rem;
-  }
-  .router-rule {
-    background: var(--surface2);
-    border-left: 3px solid var(--accent-zeus);
-    padding: 1rem 1.25rem;
-    border-radius: 0 8px 8px 0;
-    margin: 1.5rem 0 0;
-    font-size: 0.9rem;
-    color: var(--text-dim);
-  }
-  .router-rule strong { color: var(--text); }
-
-  /* Config block */
-  .config-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    margin: 1rem 0;
-  }
-  .config-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .config-body {
-    padding: 1.25rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    line-height: 1.8;
-    color: var(--text-dim);
-    overflow-x: auto;
-    white-space: pre-wrap;
-  }
-  .config-body .kw { color: #7ec8e3; }
-  .config-body .str { color: #a5d6a7; }
-  .config-body .cmt { color: #636d83; font-style: italic; }
-  .config-body .key { color: #c792ea; }
-
-  /* Footer */
-  .footer {
-    text-align: center;
-    padding: 3rem 0 1.5rem;
-    border-top: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 0.85rem;
-  }
-
-  /* Info box */
-  .info-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    margin: 1rem 0;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  .info-box .icon { font-size: 1.3rem; flex-shrink: 0; }
-  .info-box p { font-size: 0.9rem; color: var(--text-dim); }
-  .info-box p strong { color: var(--text); }
-
-  .tag-cloud {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-  }
-  .tag-cloud .tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 0.15rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    color: var(--text-dim);
-  }
-
-  @media (max-width: 600px) {
-    .container { padding: 1rem; }
-    .hero h1 { font-size: 2rem; }
-    .router-flow { flex-direction: column; gap: 0.5rem; }
-    .router-arrow { transform: rotate(90deg); }
+  @media(max-width:640px) {
+    header { padding:12px 16px; }
+    header h1 { font-size:17px; }
+    .nav-days { padding:8px 16px; top:65px; }
+    main { padding:16px; }
+    .event-row { padding:8px 12px; }
+    .event-time { min-width:70px; font-size:12px; }
+    .event-title { font-size:13px; }
   }
 </style>
 </head>
 <body>
+<canvas id="particles-canvas"></canvas>
 
-<div id="particles"></div>
-
-<div class="container">
-
-<!-- Hero -->
-<section class="hero">
-  <h1>⚡ Hermes Multi-Agent</h1>
-  <p class="subtitle">Arquitetura de roteamento inteligente por gatilho semântico</p>
-  <span class="badge">John Coelho · Estância Velha, RS · v1.0</span>
-</section>
-
-<!-- Router Overview -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">01</span>
-    Master Router — Lógica de Roteamento
+<header>
+  <h1>📅 Agenda</h1>
+  <div class="meta">
+    <span>👤 John Coelho</span>
+    <span class="badge">30 dias</span>
+    <span>🔄 Atualizado 08/06</span>
   </div>
+</header>
 
-  <div class="router-section">
-    <div class="router-flow">
-      <div class="router-node input">🗣️ Mensagem<br><span class="router-label">do usuário</span></div>
-      <div class="router-arrow">→</div>
-      <div class="router-node gatilho">🔍 Analisar<br><span class="router-label">1ª palavra</span></div>
-      <div class="router-arrow">→</div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
-          <div class="router-node jarvis-node">🤖 Jarvis</div>
-          <div class="router-node alfred-node">🎩 Alfred</div>
-          <div class="router-node zeus-node">⚡ Zeus</div>
-        </div>
-        <span class="router-label">Persona ativada</span>
-      </div>
-    </div>
+<nav class="nav-days" id="day-nav"></nav>
 
-    <div class="router-rule">
-      <strong>🎯 Regra de roteamento:</strong> Se a mensagem começar com <strong>"Jarvis"</strong>, <strong>"Alfred"</strong> ou <strong>"Zeus"</strong>, a persona correspondente é ativada imediatamente — sem avaliação de contexto. Se <strong>não houver gatilho</strong>, o sistema (Zeus) analisa o foco do pedido e direciona proativamente para Jarvis (temas técnicos) ou Alfred (lifestyle/rotina). Pedidos gerais/estratégicos ficam com o próprio Zeus.
-    </div>
-  </div>
-</section>
+<main id="main-content">
+  <div id="days-container"></div>
+</main>
 
-<!-- Personas -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(64,160,255,0.15);color:var(--accent-jarvis);">02</span>
-    Personas &amp; Gatilhos
-  </div>
-
-  <div class="persona-grid">
-
-    <!-- Zeus -->
-    <div class="persona-card zeus">
-      <div class="glow"></div>
-      <span class="badge-persona">⚡ GATILHO: "Zeus" (ou nenhum)</span>
-      <h3>Zeus</h3>
-      <div class="engine">Orquestrador Macro</div>
-      <div class="tone">"Imponente, estratégico, soberano — visão do panorama geral."</div>
-      <div class="scope-label">Atuação</div>
-      <div class="scope">
-        Responsável por decisões de alto nível, planejamento estratégico, debates filosóficos e visão macro do ecossistema. Quando o assunto não é claramente técnico nem lifestyle, Zeus assume o comando.
-      </div>
-    </div>
-
-    <!-- Jarvis -->
-    <div class="persona-card jarvis">
-      <div class="glow"></div>
-      <span class="badge-persona">🤖 GATILHO: "Jarvis"</span>
-      <h3>Jarvis</h3>
-      <div class="engine">Engine: Gemini · Modo Engenharia &amp; Tecnologia</div>
-      <div class="tone">"Analítico, direto, extremamente técnico — foco em código limpo e eficiência."</div>
-      <div class="scope-label">Escopo de Conhecimento</div>
-      <div class="scope">
-        <div class="tag-cloud">
-          <span class="tag">AWS</span>
-          <span class="tag">n8n</span>
-          <span class="tag">Agentic AI</span>
-          <span class="tag">OpenRouter</span>
-          <span class="tag">ClickUp</span>
-          <span class="tag">Wrike</span>
-          <span class="tag">Tech Summit</span>
-          <span class="tag">Aplicativos IA</span>
-          <span class="tag">Nobreaks</span>
-          <span class="tag">Marcenaria técnica</span>
-          <span class="tag">Pajero TR4 2010</span>
-          <span class="tag">F1</span>
-          <span class="tag">RIDE</span>
-          <span class="tag">Hearts of Iron IV</span>
-          <span class="tag">Ghost Recon</span>
-          <span class="tag">Battlefield</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alfred -->
-    <div class="persona-card alfred">
-      <div class="glow"></div>
-      <span class="badge-persona">🎩 GATILHO: "Alfred"</span>
-      <h3>Alfred</h3>
-      <div class="engine">Engine: DeepSeek 4 Flash · Modo Lifestyle &amp; Concierge</div>
-      <div class="tone">"Sofisticado, polido, com sabedoria old school e atenção aos detalhes."</div>
-      <div class="scope-label">Escopo de Conhecimento</div>
-      <div class="scope">
-        <div class="tag-cloud">
-          <span class="tag">Família: Sabrina</span>
-          <span class="tag">Filho</span>
-          <span class="tag">Mãe Odete</span>
-          <span class="tag">Viagens: BsAs</span>
-          <span class="tag">Mendoza</span>
-          <span class="tag">Vinil Hi-Fi</span>
-          <span class="tag">Rockabilly</span>
-          <span class="tag">Blues</span>
-          <span class="tag">Elvis</span>
-          <span class="tag">Johnny Cash</span>
-          <span class="tag">AC/DC</span>
-          <span class="tag">Metallica</span>
-          <span class="tag">Guns N' Roses</span>
-          <span class="tag">Montecristo</span>
-          <span class="tag">Cohiba</span>
-          <span class="tag">Dona Flor</span>
-          <span class="tag">Jim Beam</span>
-          <span class="tag">Glenlivet</span>
-          <span class="tag">Maker's Mark</span>
-          <span class="tag">Bulleit</span>
-          <span class="tag">Wild Turkey</span>
-          <span class="tag">Merlot</span>
-          <span class="tag">Tannat</span>
-          <span class="tag">Cabernet Franc</span>
-          <span class="tag">Brisket</span>
-          <span class="tag">Growth Supplements</span>
-          <span class="tag">Sport Club Internacional</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- Routing Details -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(232,72,72,0.15);color:var(--accent-alfred);">03</span>
-    Diagrama de Decisão
-  </div>
-
-  <div class="router-section" style="padding:2rem;">
-    <pre style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;line-height:1.6;color:var(--text-dim);overflow-x:auto;white-space:pre;">
-<span style="color:var(--text);font-weight:600;">function</span> routePersona(message):
-    <span style="color:var(--text);font-weight:600;">firstWord</span> = message.split()[0].lower()
-
-    <span style="color:#888;"># Gatilho direto — obedece sem avaliar</span>
-    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"jarvis"</span>:
-        <span style="color:#c792ea;">return</span> <span style="color:#40a0ff;">Persona.JARVIS</span>  <span style="color:#888;">// Engenharia</span>
-    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"alfred"</span>:
-        <span style="color:#c792ea;">return</span> <span style="color:#e84848;">Persona.ALFRED</span>   <span style="color:#888;">// Lifestyle</span>
-    <span style="color:#c792ea;">if</span> firstWord == <span style="color:#a5d6a7;">"zeus"</span>:
-        <span style="color:#c792ea;">return</span> <span style="color:#f0c040;">Persona.ZEUS</span>    <span style="color:#888;">// Orquestrador</span>
-
-    <span style="color:#888;"># Sem gatilho — analisa o foco do pedido</span>
-    <span style="color:#c792ea;">if</span> isTechnicalTopic(message):
-        <span style="color:#c792ea;">return</span> <span style="color:#40a0ff;">Persona.JARVIS</span>  <span style="color:#888;">// Direcionamento proativo</span>
-    <span style="color:#c792ea;">if</span> isLifestyleTopic(message):
-        <span style="color:#c792ea;">return</span> <span style="color:#e84848;">Persona.ALFRED</span> <span style="color:#888;">// Direcionamento proativo</span>
-
-    <span style="color:#c792ea;">return</span> <span style="color:#f0c040;">Persona.ZEUS</span>    <span style="color:#888;">// Tema geral/estratégico</span>
-    </pre>
-  </div>
-</section>
-
-<!-- Config -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">04</span>
-    Configuração do Sistema
-  </div>
-
-  <div class="config-block">
-    <div class="config-header">🧠 Memória Permanente (Hermes Memory)</div>
-    <div class="config-body"><span class="cmt">// Registrado no sistema de memória persistente do Hermes</span>
-<span class="cmt">// Injetado automaticamente em todas as sessões</span>
-
-<span class="kw">ROTEAMENTO MULTIAGENTE</span>: 1a palavra gatilho. pt-BR. Nunca explicar.
-
-<span class="str">"JARVIS"</span> — Engenharia (mente Gemini):
-  AWS, n8n, Agentic AI, OpenRouter, ClickUp/Wrike,
-  Tech Summit29, nobreaks, marcenaria (MDF, madeira),
-  Pajero TR4, gaming (F1, RIDE, HoI4, Ghost Recon, Battlefield)
-
-<span class="str">"ALFRED"</span> — Lifestyle (mente Deepseek4):
-  Sabrina, filho, mae Odete. Viagens: BsAs/Uruguai, Mendoza.
-  Vinis/Hi-Fi, charutos, whisky, vinho. Brisket. Inter.
-
-<span class="str">ZEUS</span> ou sem gatilho:
-  Analisar foco e direcionar p/ Jarvis (tecnico) ou Alfred
-  (lifestyle) se tema claro. Se chamou direto, obedecer sem
-  avaliar. Zeus resolve temas gerais/estrategicos.</div>
-  </div>
-</section>
-
-<!-- Sample Interactions -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(64,160,255,0.15);color:var(--accent-jarvis);">05</span>
-    Exemplos de Interação
-  </div>
-
-  <div class="config-block">
-    <div class="config-header">🎯 Gatilho Direto</div>
-    <div class="config-body"><span style="color:var(--accent-jarvis);font-weight:600;">"Jarvis,</span> <span style="color:var(--text-dim);">configura um bucket S3 com políticas de acesso restrito"</span>
-→ <span class="str">Persona Jarvis ativada — resposta técnica e analítica</span>
-
-<span style="color:var(--accent-alfred);font-weight:600;">"Alfred,</span> <span style="color:var(--text-dim);">qual whisky recomenda para acompanhar um charuto hoje?"</span>
-→ <span class="str">Persona Alfred ativada — resposta sofisticada e old school</span>
-
-<span style="color:var(--accent-zeus);font-weight:600;">"Zeus,</span> <span style="color:var(--text-dim);">como estamos em relação aos prazos dos projetos?"</span>
-→ <span class="str">Persona Zeus ativada — visão macro e estratégica</span></div>
-  </div>
-
-  <div class="config-block">
-    <div class="config-header">🔄 Sem Gatilho (Direcionamento Proativo)</div>
-    <div class="config-body"><span style="color:var(--text-dim);">"Quais sao meus compromissos de hj?"</span>
-→ <span class="str">Zeus identifica tema de agenda/rotina → direciona para Alfred</span>
-
-<span style="color:var(--text-dim);">"Faz um deploy de uma lambda na AWS pra mim"</span>
-→ <span class="str">Zeus identifica tema técnico → direciona para Jarvis</span>
-
-<span style="color:var(--text-dim);">"O que voce acha do futuro da inteligencia artificial?"</span>
-→ <span class="str">Tema geral/estratégico → Zeus responde diretamente</span></div>
-  </div>
-</section>
-
-<!-- Current Tech Stack -->
-<section class="section">
-  <div class="section-title">
-    <span class="num" style="background:rgba(240,192,64,0.15);color:var(--accent-zeus);">06</span>
-    Stack &amp; Configurações
-  </div>
-
-  <div class="info-box">
-    <div class="icon">⚙️</div>
-    <p>
-      <strong>Modelo Principal:</strong> DeepSeek V4 Flash (via OpenRouter) — conversas diárias, persona Alfred<br>
-      <strong>Engine Técnica:</strong> Gemini 2.5 Flash (via Google) — persona Jarvis, visão computacional<br>
-      <strong>Modelo Local:</strong> Qwen 2.5 7B (via Ollama) — fallback offline<br>
-      <strong>GPU:</strong> NVIDIA RTX 4060 Ti 8GB · <strong>STT:</strong> faster-whisper large-v3<br>
-      <strong>Orquestrador:</strong> Hermes Agent · <strong>Memória:</strong> Persistente entre sessões
-    </p>
-  </div>
-
-  <div class="info-box">
-    <div class="icon">🌐</div>
-    <p>
-      <strong>Canais:</strong> Telegram (ativo) · WhatsApp (pendente)<br>
-      <strong>Google Workspace:</strong> Service Account — Calendários profissional e pessoal<br>
-      <strong>Wrike:</strong> Briv.IA — Dual Track Agile com Discovery + Delivery
-    </p>
-  </div>
-</section>
-
-<!-- Contact Form -->
-<section class="section" id="contato">
-  <div class="section-title">
-    <span class="num" style="background:linear-gradient(135deg,var(--accent-zeus),var(--accent-alfred));">07</span>
-    🚀 Tenho Interesse!
-  </div>
-
-  <div class="info-box" style="border-left:3px solid #22c55e;">
-    <div class="icon">💡</div>
-    <p style="font-size:0.9rem;color:var(--text-dim);">
-      Quer saber mais sobre a arquitetura, contratar uma consultoria ou deixar uma sugestão? 
-      Preencha o formulário abaixo — sua mensagem vai direto para o <strong>John</strong>.
-    </p>
-  </div>
-
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:600px;margin:0 auto;">
-    <form id="leadForm" style="display:flex;flex-direction:column;gap:1.25rem;">
-      <div>
-        <label for="name" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Nome *</label>
-        <input type="text" id="name" name="name" required
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
-      </div>
-      <div>
-        <label for="email" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Email *</label>
-        <input type="email" id="email" name="email" required
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
-      </div>
-      <div>
-        <label for="interest" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Área de Interesse</label>
-        <select id="interest" name="interest"
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''">
-          <option value="" style="background:var(--surface);">Selecione uma área</option>
-          <option value="engenharia" style="background:var(--surface);">🤖 Engenharia & Arquitetura (Jarvis)</option>
-          <option value="concierge" style="background:var(--surface);">🎩 Lifestyle & Concierge (Alfred)</option>
-          <option value="consultoria" style="background:var(--surface);">💼 Consultoria Estratégica (Zeus)</option>
-          <option value="supabase" style="background:var(--surface);">🔥 Supabase & Backend</option>
-          <option value="aws" style="background:var(--surface);">☁️ AWS & Cloud</option>
-          <option value="outro" style="background:var(--surface);">📌 Outro</option>
-        </select>
-      </div>
-      <div>
-        <label for="message" style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text-dim);">Mensagem</label>
-        <textarea id="message" name="message" rows="4"
-          style="width:100%;padding:0.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;outline:none;resize:vertical;font-family:inherit;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='var(--accent-jarvis)'" onblur="this.style.borderColor=''"></textarea>
-      </div>
-      <button type="submit" id="submitBtn"
-        style="padding:0.9rem 2rem;background:linear-gradient(135deg,var(--accent-jarvis),#2563eb);border:none;border-radius:8px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;"
-        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 20px rgba(64,160,255,0.3)'"
-        onmouseout="this.style.transform='';this.style.boxShadow=''">
-        📨 Enviar Interesse
-      </button>
-    </form>
-    <div id="formStatus" style="margin-top:1rem;text-align:center;font-size:0.9rem;display:none;"></div>
-  </div>
-</section>
-
-<div class="footer">
-  <p>⚡ Hermes Multi-Agent Architecture · John Coelho · Estância Velha, RS</p>
-  <p style="margin-top:0.3rem;font-size:0.75rem;">Atualizado em Junho de 2026</p>
-</div>
-
-</div>
+<footer>
+  Hermes Agent · ZEUS · Agenda automática via Google Calendar
+</footer>
 
 <script>
-// Particles background
-const container = document.getElementById('particles');
-for (let i = 0; i < 50; i++) {
-  const p = document.createElement('div');
-  p.className = 'particle';
-  p.style.left = Math.random() * 100 + '%';
-  p.style.width = (Math.random() * 3 + 1) + 'px';
-  p.style.height = p.style.width;
-  p.style.animationDuration = (Math.random() * 15 + 10) + 's';
-  p.style.animationDelay = (Math.random() * 20) + 's';
-  container.appendChild(p);
+// ─── Particle Canvas ───
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+}
+resize(); window.addEventListener('resize', resize);
+
+const particles = Array.from({length:70}, () => ({
+  x:Math.random()*W, y:Math.random()*H,
+  vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5,
+  r:Math.random()*1.5+0.5
+}));
+
+let mx=-1e9, my=-1e9;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+
+function drawParticles() {
+  ctx.clearRect(0,0,W,H);
+  for(const p of particles) {
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>W) p.vx*=-1;
+    if(p.y<0||p.y>H) p.vy*=-1;
+    const dx=mx-p.x, dy=my-p.y, dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<140) {
+      p.x-=dx*0.02; p.y-=dy*0.02;
+    }
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(108,92,231,0.3)';
+    ctx.fill();
+  }
+  for(let i=0; i<particles.length; i++) {
+    for(let j=i+1; j<particles.length; j++) {
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<140) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(108,92,231,${0.12*(1-dist/140)})`;
+        ctx.lineWidth=0.5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ─── Calendar Data (inline JSON) ───
+const DAYS = [
+  {
+    "date": "2026-06-08",
+    "label": "08/06 (Seg)",
+    "events": [
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "08:00",
+        "summary": "PLAN",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "10:00",
+        "summary": "Encontro Estratégico - Novo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "10:00",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "11:00",
+        "summary": "BrivIA - Tático ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "14:00",
+        "summary": "Encontro Tático",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "16:00",
+        "summary": "Integração Orqstra e Briv.IA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "18:00",
+        "summary": "BARBA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "08/06 (Seg)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-09",
+    "label": "09/06 (Ter)",
+    "events": [
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "08:00",
+        "summary": "IDA PARA CALDEIRA [POA]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "10:00",
+        "summary": "DUE DILLIGENCE GOOGLE",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "14:00",
+        "summary": "Operacional Geral do Chapter",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Acompanhamento 2",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "16:00",
+        "summary": "Jonas / Jonathas [FEEDBACK]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "17:00",
+        "summary": "RETORNO CALDEIRA [POA/EV]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "09/06 (Ter)",
+        "time": "☀️ Dia todo",
+        "summary": "Instituto Caldeira POA",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-10",
+    "label": "10/06 (Qua)",
+    "events": [
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "09:00",
+        "summary": "Discovery Backlog Briv.IA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "10:30",
+        "summary": "Encontro Tático Chapter",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "10:40",
+        "summary": "Auren - Status Interno",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "12:30",
+        "summary": "Sem título",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "16:30",
+        "summary": "Pravy | Brivia & Fruki - Digital Factory",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "17:00",
+        "summary": "1-1 Matheus / Jonathas",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "10/06 (Qua)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-11",
+    "label": "11/06 (Qui)",
+    "events": [
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "10:00",
+        "summary": "1-1 Konrad",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "11:30",
+        "summary": "AZUL - brivia ia / wrike / rotina dados-operacao",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Fechamento",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "17:00",
+        "summary": "Brivia | Reunião Geral",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "17:00",
+        "summary": "1-1 Bruno e Jonathas",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "11/06 (Qui)",
+        "time": "☀️ Dia todo",
+        "summary": "Exo Hub Feevale ",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-12",
+    "label": "12/06 (Sex)",
+    "events": [
+      {
+        "day_label": "12/06 (Sex)",
+        "time": "10:00",
+        "summary": "[Briv.IA] Tribo Eliel",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "12/06 (Sex)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "12/06 (Sex)",
+        "time": "14:30",
+        "summary": "Weekly Briv.IA ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "12/06 (Sex)",
+        "time": "16:00",
+        "summary": "Treinamento executivo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "12/06 (Sex)",
+        "time": "17:00",
+        "summary": "REVIEW SEMANA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "12/06 (Sex)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-15",
+    "label": "15/06 (Seg)",
+    "events": [
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "08:00",
+        "summary": "PLAN",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "10:00",
+        "summary": "Encontro Estratégico - Novo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "11:00",
+        "summary": "Status Ecossistema Briv.IA & Orqstra",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "14:00",
+        "summary": "Encontro Tático",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "14:30",
+        "summary": "IA Grupo Executivo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "15/06 (Seg)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-16",
+    "label": "16/06 (Ter)",
+    "events": [
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "08:00",
+        "summary": "IDA PARA CALDEIRA [POA]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "10:00",
+        "summary": "Briv.IA | PLANNING",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Planning",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "17:00",
+        "summary": "RETORNO CALDEIRA [POA/EV]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "16/06 (Ter)",
+        "time": "☀️ Dia todo",
+        "summary": "Instituto Caldeira POA",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-17",
+    "label": "17/06 (Qua)",
+    "events": [
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "10:30",
+        "summary": "Encontro Tático Chapter",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "10:40",
+        "summary": "Auren - Status Interno",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "14:00",
+        "summary": "Comitê LGPD - Checkpoint",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "14:30",
+        "summary": "[Fundacred] Encontro Mensal -  Digital Factory",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "17/06 (Qua)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-18",
+    "label": "18/06 (Qui)",
+    "events": [
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "11:00",
+        "summary": "Platforms & Partnerships ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "11:30",
+        "summary": "AZUL - brivia ia / wrike / rotina dados-operacao",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Acompanhamento 1",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "15:30",
+        "summary": "Consulta Dr Rafael",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "18/06 (Qui)",
+        "time": "☀️ Dia todo",
+        "summary": "Exo Hub Feevale ",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-19",
+    "label": "19/06 (Sex)",
+    "events": [
+      {
+        "day_label": "19/06 (Sex)",
+        "time": "10:00",
+        "summary": "[Briv.IA] Tribo Eliel",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "19/06 (Sex)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "19/06 (Sex)",
+        "time": "14:30",
+        "summary": "Weekly Briv.IA ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "19/06 (Sex)",
+        "time": "17:00",
+        "summary": "REVIEW SEMANA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "19/06 (Sex)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-22",
+    "label": "22/06 (Seg)",
+    "events": [
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "08:00",
+        "summary": "PLAN",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "10:00",
+        "summary": "Encontro Estratégico - Novo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "11:00",
+        "summary": "BrivIA - Tático ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "14:00",
+        "summary": "Encontro Tático",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "14:30",
+        "summary": "IA Grupo Executivo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "22/06 (Seg)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-23",
+    "label": "23/06 (Ter)",
+    "events": [
+      {
+        "day_label": "23/06 (Ter)",
+        "time": "08:00",
+        "summary": "IDA PARA CALDEIRA [POA]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "23/06 (Ter)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "23/06 (Ter)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "23/06 (Ter)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Acompanhamento 2",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "23/06 (Ter)",
+        "time": "17:00",
+        "summary": "RETORNO CALDEIRA [POA/EV]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "23/06 (Ter)",
+        "time": "☀️ Dia todo",
+        "summary": "Instituto Caldeira POA",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-24",
+    "label": "24/06 (Qua)",
+    "events": [
+      {
+        "day_label": "24/06 (Qua)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "24/06 (Qua)",
+        "time": "10:30",
+        "summary": "Encontro Tático Chapter",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "24/06 (Qua)",
+        "time": "10:40",
+        "summary": "Auren - Status Interno",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "24/06 (Qua)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "24/06 (Qua)",
+        "time": "15:00",
+        "summary": "Claudia / Jonathas",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "24/06 (Qua)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-25",
+    "label": "25/06 (Qui)",
+    "events": [
+      {
+        "day_label": "25/06 (Qui)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "25/06 (Qui)",
+        "time": "11:30",
+        "summary": "AZUL - brivia ia / wrike / rotina dados-operacao",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "25/06 (Qui)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "25/06 (Qui)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Fechamento",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "25/06 (Qui)",
+        "time": "☀️ Dia todo",
+        "summary": "Exo Hub Feevale ",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-26",
+    "label": "26/06 (Sex)",
+    "events": [
+      {
+        "day_label": "26/06 (Sex)",
+        "time": "10:00",
+        "summary": "[Briv.IA] Tribo Eliel",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "26/06 (Sex)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "26/06 (Sex)",
+        "time": "14:00",
+        "summary": "Status Executivo Orqstra / Briv.IA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "26/06 (Sex)",
+        "time": "14:30",
+        "summary": "Weekly Briv.IA ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "26/06 (Sex)",
+        "time": "17:00",
+        "summary": "REVIEW SEMANA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "26/06 (Sex)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-29",
+    "label": "29/06 (Seg)",
+    "events": [
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "08:00",
+        "summary": "PLAN",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "10:00",
+        "summary": "Encontro Estratégico - Novo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "11:00",
+        "summary": "Status Ecossistema Briv.IA & Orqstra",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "14:00",
+        "summary": "Encontro Tático",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "14:30",
+        "summary": "IA Grupo Executivo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "29/06 (Seg)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-30",
+    "label": "30/06 (Ter)",
+    "events": [
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "08:00",
+        "summary": "IDA PARA CALDEIRA [POA]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "10:00",
+        "summary": "Briv.IA | PLANNING",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "14:00",
+        "summary": "Operacional Geral do Chapter",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Planning",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "16:30",
+        "summary": "1-1 Jonas",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "17:00",
+        "summary": "RETORNO CALDEIRA [POA/EV]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "30/06 (Ter)",
+        "time": "☀️ Dia todo",
+        "summary": "Instituto Caldeira POA",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-01",
+    "label": "01/07 (Qua)",
+    "events": [
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "10:30",
+        "summary": "Encontro Tático Chapter",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "10:40",
+        "summary": "Auren - Status Interno",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "12:30",
+        "summary": "NOTA FISCAL",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "14:00",
+        "summary": "Comitê LGPD - Checkpoint",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "01/07 (Qua)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-02",
+    "label": "02/07 (Qui)",
+    "events": [
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "11:30",
+        "summary": "AZUL - brivia ia / wrike / rotina dados-operacao",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "15:00",
+        "summary": "HEALTH CHECK TECNOLOGIA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Acompanhamento 1",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "15:00",
+        "summary": "Brivia/Auren - MENSAL",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "02/07 (Qui)",
+        "time": "☀️ Dia todo",
+        "summary": "Exo Hub Feevale ",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-03",
+    "label": "03/07 (Sex)",
+    "events": [
+      {
+        "day_label": "03/07 (Sex)",
+        "time": "10:00",
+        "summary": "[Briv.IA] Tribo Eliel",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "03/07 (Sex)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "03/07 (Sex)",
+        "time": "14:30",
+        "summary": "Weekly Briv.IA ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "03/07 (Sex)",
+        "time": "17:00",
+        "summary": "Brivia | Reunião Geral",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "03/07 (Sex)",
+        "time": "17:00",
+        "summary": "REVIEW SEMANA",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "03/07 (Sex)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-06",
+    "label": "06/07 (Seg)",
+    "events": [
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "08:00",
+        "summary": "PLAN",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "10:00",
+        "summary": "Encontro Estratégico - Novo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "11:00",
+        "summary": "BrivIA - Tático ",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "14:00",
+        "summary": "Encontro Tático",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "14:30",
+        "summary": "IA Grupo Executivo",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "06/07 (Seg)",
+        "time": "☀️ Dia todo",
+        "summary": "Casa",
+        "type": "allday"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-07",
+    "label": "07/07 (Ter)",
+    "events": [
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "08:00",
+        "summary": "IDA PARA CALDEIRA [POA]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "09:30",
+        "summary": "Briv.IA - Daily",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "10:30",
+        "summary": "Fernando / Jonathas",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "12:00",
+        "summary": "ALMOÇO E TREINO",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "15:00",
+        "summary": "Pareto & Brivia | Acompanhamento 2",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "17:00",
+        "summary": "RETORNO CALDEIRA [POA/EV]",
+        "type": "scheduled"
+      },
+      {
+        "day_label": "07/07 (Ter)",
+        "time": "☀️ Dia todo",
+        "summary": "Instituto Caldeira POA",
+        "type": "allday"
+      }
+    ]
+  }
+];
+
+// ─── Render ───
+const DAY_NAMES = {'Mon':'Seg','Tue':'Ter','Wed':'Qua','Thu':'Qui','Fri':'Sex','Sat':'Sáb','Sun':'Dom'};
+
+function render() {
+  const container = document.getElementById('days-container');
+  const nav = document.getElementById('day-nav');
+  const todayStr = '2026-06-08';
+  let html = '';
+  let navHtml = '';
+
+  DAYS.forEach((day, idx) => {
+    const isToday = day.date === todayStr;
+    const shortLabel = day.label.replace(/\([^)]+\)/, m => '('+(DAY_NAMES[m.slice(1,-1)]||m.slice(1,-1))+')');
+
+    navHtml += `<a href="#day-${idx}" class="${isToday?'today':''}" data-idx="${idx}">${shortLabel}</a>`;
+
+    html += `<section class="day-section" id="day-${idx}">
+      <div class="day-header">
+        <h2>${shortLabel}</h2>
+        <span class="date-badge">${isToday?'📌 Hoje':''}</span>
+        <span class="day-count">${day.events.length} eventos</span>
+      </div>
+      <div class="day-card${isToday?' today-marker':''}">
+        ${day.events.map(ev => `
+          <div class="event-row">
+            <span class="event-time ${ev.type==='allday'?'allday':''}">${ev.time}</span>
+            <span class="event-dot ${ev.type==='allday'?'allday':''}"></span>
+            <span class="event-title">${ev.summary}</span>
+          </div>
+        `).join('')}
+      </div>
+    </section>`;
+  });
+
+  if(!DAYS.length) {
+    html = `<div class="empty-state">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <p>Nenhum compromisso nos próximos 30 dias</p>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+  nav.innerHTML = navHtml;
+
+  // IntersectionObserver for scroll-based active nav
+  const sections = document.querySelectorAll('.day-section');
+  const navLinks = nav.querySelectorAll('a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const idx = entry.target.id.replace('day-','');
+        navLinks.forEach(a => { if(a.dataset.idx===idx) a.classList.add('active'); });
+      }
+    });
+  }, { threshold:0.08 });
+  sections.forEach(s => observer.observe(s));
 }
 
-// Contact Form - Submit to API
-(async function() {
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.0');
-  const supabase = createClient('https://lwaoxnjajxljxusxujku.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3YW94bmphanhsanh1c3h1amt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM0MDUsImV4cCI6MjA5NjE0OTQwNX0.usK7WkdJaGmXi5rk3tPoTKd4yH5EWCbcxsHaR3WOcEk');
-
-  document.getElementById('leadForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const status = document.getElementById('formStatus');
-    
-    btn.disabled = true;
-    btn.innerHTML = 'Enviando...';
-    status.style.display = 'none';
-    
-    const { error } = await supabase.from('leads').insert({
-      name: document.getElementById('name').value.trim(),
-      email: document.getElementById('email').value.trim(),
-      interest: document.getElementById('interest').value,
-      message: document.getElementById('message').value.trim(),
-      source: 'hermes-web'
-    });
-    
-    if (error) {
-      status.style.display = 'block';
-      status.style.color = '#ef4444';
-      status.innerHTML = 'Erro: ' + error.message + '. Tente novamente.';
-    } else {
-      status.style.display = 'block';
-      status.style.color = '#22c55e';
-      status.innerHTML = 'Mensagem enviada com sucesso! Entraremos em contato.';
-      document.getElementById('leadForm').reset();
-    }
-    
-    btn.disabled = false;
-    btn.innerHTML = 'Enviar Interesse';
-  });
-})();
+// ─── Inject data & render ───
+document.addEventListener('DOMContentLoaded', render);
 </script>
-
 </body>
 </html>
